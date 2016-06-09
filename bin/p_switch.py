@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 CLOUD Makes the initial preperation of json dictionary for the switch request FROM/TO batch/cloud and sets and starts the TTL clock
-Usage: switch.py to_batch <to_batch_file>
+Usage: p_switch.py to_batch|to_cloud filename
 
 """
 import os,sys,time
@@ -13,8 +13,9 @@ def now():
 
 def mlog(f,m,dbg=True):
     """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    script_name =  os.path.basename(sys.argv[0])
     if dbg:
-        f.write("%s: "%now()+m+'\n')
+        f.write("%s %s:"%(now(), script_name)+m+'\n')
         f.flush()
 
 def get_jsondict(json_file):
@@ -22,7 +23,8 @@ def get_jsondict(json_file):
     try:
         batch_cloud_dict = json.load(open(json_file,'r'))
     except:
-        batch_cloud_dict = {'B':[],'C':[],'FB':[],'FC':[],'B2CR':[],'B2C':[],'C2B':[],'C2BR':[]}
+        #what should we do here
+        #batch_cloud_dict = {'B':[],'C':[],'FB':[],'FC':[],'B2CR':[],'B2C':[],'C2B':[],'C2BR':[]}
         mlog(logf,"error parsing %s"%json_file)
     return batch_cloud_dict
 
@@ -54,11 +56,6 @@ except Exception,e:
     print str(e)
     sys.exit(0)
 
-"""Initialization from Conf file"""
-USERNAME = jc['USERNAME_d']
-PASSWORD = jc['PASSWORD_d']
-PROJECT_ID = jc['PROJECT_ID_d']
-AUTH_URL = jc['AUTH_URL']
 log_dir = os.path.join(homedir,jc['log_dir'])
 log_file = os.path.join(log_dir,jc['log_file'])
 
@@ -87,16 +84,26 @@ if have_args:
                 """Creats the set B2CR from the hostnames in the file"""
                 B2CR = set([x for x in open(to_cloud_file,'r').read().split() if x])
             except:
+                print "Error while parsing %s"%to_cloud_file
                 mlog(logf,"Error while parsing %s"%to_cloud_file)
                 B2CR = set()
             #"""1)B2CR should not include the hostname which are already in list C and 2)Contains unique elements from present and past requests"""
+            if not B2CR.isdisjoint(set(batch_cloud_dict['C'])): #intersection
+                already_in_C = B2CR.intersection(set(batch_cloud_dict['C']))
+                for node in already_in_C:
+                    print "Node: %s is already in C set - Doing Nothing" %node
+                    mlog(logf,"Node: %s is already in C set - Doing Nothing" %node)
             B2CR = B2CR - set(batch_cloud_dict['C'])
             batch_cloud_dict['B2CR'] = list(set(batch_cloud_dict['B2CR']) | B2CR)
+            for hostname in batch_cloud_dict['B2CR']:
+                print "Moving node %s to B2CR" % hostname
+                mlog(logf,"Moving node %s to B2CR" % hostname)
             """Write back the updated dict to json file"""
             with open(batch_cloud_json, 'w') as f:
                 json.dump(batch_cloud_dict, f)
             #os.remove(to_cloud_file)#commented until testing
         else:
+            print "Please check the path of the file"
             mlog(logf,"Please check the path of the file")
         
     elif opt == 'to_batch':
@@ -110,8 +117,16 @@ if have_args:
                 mlog(logf,"Error while parsing %s"%to_batch_file)
                 C2BR = set()
             #"""1)C2BR should not include the hostname which are already in list B and 2)Contains unique elements from present and past requests"""
+            if not C2BR.isdisjoint(set(batch_cloud_dict['B'])): #intersection
+                already_in_B = C2BR.intersection(set(batch_cloud_dict['B']))
+                for node in already_in_B:
+                    print "Node: %s is already in B set - Doing Nothing" %node
+                    mlog(logf,"Node: %s is already in B set - Doing Nothing" %node)
             C2BR = C2BR - set(batch_cloud_dict['B'])
             batch_cloud_dict['C2BR'] = list(set(batch_cloud_dict['C2BR']) | C2BR)
+            for hostname in batch_cloud_dict['C2BR']:
+                print "Moving node %s to C2BR" % hostname
+                mlog(logf,"Moving node %s to C2BR" % hostname)
             """Write back the updated dict to json file"""
             with open(batch_cloud_json, 'w') as f:
                 json.dump(batch_cloud_dict, f)

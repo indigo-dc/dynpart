@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 CLOUD create and start up a new instance script
-Usage: new_instance.py <name-of-the-instance>
+Usage: new_instance.py
 
 """
 
@@ -25,8 +25,9 @@ def now():
 
 def mlog(f,m,dbg=True):
     """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    script_name =  os.path.basename(sys.argv[0])
     if dbg:
-        f.write("%s: "%now()+m+'\n')
+        f.write("%s %s:"%(now(), script_name)+m+'\n')
         f.flush()
 
 homedir = '/home/TIER1/sdalpra/demo/'
@@ -64,7 +65,13 @@ logf = open(log_file,'a')
 
 nova = client.Client(USERNAME, PASSWORD, PROJECT_ID, AUTH_URL)
 
-floating_ip = nova.floating_ips.create()
+try:
+    floating_ip = nova.floating_ips.create()
+except Exception,e:
+    #TODO: consider logging                                                                                                                                                    
+    print "novaclient: No available IP-Try to release Floating IP", str(e)
+    sys.exit(0)
+
 instance_name = "vwn-"+floating_ip.ip.replace('.','-')
 
 image_used = jc['image']

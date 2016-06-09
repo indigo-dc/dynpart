@@ -25,8 +25,9 @@ def now():
 
 def mlog(f,m,dbg=True):
     """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    script_name =  os.path.basename(sys.argv[0])
     if dbg:
-        f.write("%s: "%now()+m+'\n')
+        f.write("%s %s:"%(now(), script_name)+m+'\n')
         f.flush()
 
 homedir = '/home/TIER1/sdalpra/demo/'
@@ -82,7 +83,13 @@ sleeptime = min_sleep + random.random()*30
 n = 1
 success = False
 while True:
-    floating_ip = nova.floating_ips.create()
+    try:
+        floating_ip = nova.floating_ips.create()
+    except Exception,e:
+        #TODO: consider logging
+        print "novaclient: No available IP", str(e)
+        time.sleep(20)
+        continue
     instance_name = "vwn-"+floating_ip.ip.replace('.','-')
 #    instance_name = "test_"+str(n)
     """create the instance"""

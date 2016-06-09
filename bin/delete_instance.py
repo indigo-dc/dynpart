@@ -17,30 +17,26 @@ import os,sys,time
 import json
 from novaclient.v2 import client
 
-##TODO : sys.path.add('my_fancy_dir')
-##from dynp_common import now,mlog
-
 def now():
     """returns human readable date and time"""
     return time.ctime(time.time())
 
 def mlog(f,m,dbg=True):
     """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    script_name =  os.path.basename(sys.argv[0])
     if dbg:
-        f.write("%s: "%now()+m+'\n')
+        f.write("%s %s:"%(now(), script_name)+m+'\n')
         f.flush()
+homedir = '/home/TIER1/sdalpra/demo/'
+conf_dir = os.path.join(homedir,"etc/")
+conf_file = os.path.join(conf_dir,'dynp.conf')
 
-conf_dir = "/etc/indigo/dynp"
-conf_file = 'dynp.conf' 
-
-jcf = os.path.join(conf_dir,conf_file)
-if not os.path.isfile(jcf):
-        print "%s file not found"%jcf
+if not os.path.isfile(conf_file):
+        print "%s file not found"%conf_file
         sys.exit(1)
-        
 
 try:
-    jc = json.load(open(jcf,'r'))
+    jc = json.load(open(conf_file,'r'))
 except ValueError:
     print "error while reading %s"%conf_file
 except AttributeError:
@@ -54,16 +50,15 @@ USERNAME = jc['USERNAME_d']
 PASSWORD = jc['PASSWORD_d']
 PROJECT_ID = jc['PROJECT_ID_d']
 AUTH_URL = jc['AUTH_URL']
-log_dir = jc['log_dir']
-log_file = jc['log_file']
+log_dir = os.path.join(homedir,jc['log_dir'])
+log_file = os.path.join(log_dir,jc['log_file'])
 sleeptime = jc['sleeptime']
 
-log_fn = os.path.join(log_dir,log_file)
-if not os.path.isfile(log_fn):
-        print "%s file not found"%log_fn
-        sys.exit(1)
+if not os.path.isdir(log_dir):
+    print "%s log directory not found"%log_dir
+    sys.exit(1)
 
-logf = open(log_fn,'a')
+logf = open(log_file,'a')
 
 nova = client.Client(USERNAME, PASSWORD, PROJECT_ID, AUTH_URL)
 
@@ -75,5 +70,9 @@ except IndexError:
 
 """delete the instance"""
 mlog(logf, "Deleting the instance: "+instance_name)
+ip = instance_name.partition('-')[2].replace('-','.')
+ip_id = nova.floating_ips.find(ip=ip).id
+mlog(logf, "Releasing the IP %s" %ip)
 instance_id = [x.id for x in nova.servers.list() if x.name==instance_name]
 nova.servers.delete(instance_id[0])
+nova.floating_ips.delete(ip_id)
