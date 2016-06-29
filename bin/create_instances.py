@@ -1,50 +1,62 @@
 #!/usr/bin/env python
 """
-CLOUD creates many instances after a random (in order of 5 mins) sleep time
+creates and start up many instances with name in the format vwn-<ip_seperated_with_dash> in a loop with random (in order of 1 min) sleep time
 Usage: create_instances.py
 
 """
 
 
 """
-Algorithm logic
+Algorithm
 
 Assume: Image, flavor and keypair is defined in the conf file
-Take: The authentication parameters from the conf file and name of the instance from cmdline
-Action: Creates a new instance and checks the status of instance until it becomes ACTIVE
+Take: The authentication parameters from the conf file
+Does:  Creates and start up many instance with name in the format vwn-<ip_seperated_with_dash>. In case of Error state it tries for max_tries before releasing the IP.
 
 """
 
-import os,sys,time,random
+import os
+import sys
+import time
+import random
 import json
 from novaclient.v2 import client
+from neutronclient.v2_0 import client as neutronClient
+
+conf_file = '/etc/indigo/dynpart/dynp.conf'
+
 
 def now():
     """returns human readable date and time"""
     return time.ctime(time.time())
 
-def mlog(f,m,dbg=True):
-    """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
-    script_name =  os.path.basename(sys.argv[0])
-    if dbg:
-        f.write("%s %s:"%(now(), script_name)+m+'\n')
-        f.flush()
 
-homedir = '/home/TIER1/sdalpra/demo/'
-conf_dir = os.path.join(homedir,"etc/")
-conf_file = os.path.join(conf_dir,'dynp.conf')
+def mlog(f, m, dbg=True):
+    """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    script_name = os.path.basename(sys.argv[0])
+    msg = "%s %s:" % (now(), script_name) + m
+    f.write(msg + '\n')
+    f.flush()
+    if dbg:
+        print msg
+
+
+def help():
+    print """"usage: create_instances.py \n                                                                                                                                      
+Creates and start up many instance with name in the format vwn-<ip_seperated_with_dash>. In case of Error state it tries for max_tries before releasing the IP.
+"""
 
 if not os.path.isfile(conf_file):
-    print "%s file not found"%conf_file
+    print "%s file not found" % conf_file
     sys.exit(1)
-        
+
 try:
-    jc = json.load(open(conf_file,'r'))
+    jc = json.load(open(conf_file, 'r'))
 except ValueError:
-    print "error while reading %s"%conf_file
+    print "error while reading %s" % conf_file
 except AttributeError:
-    print "wrong json syntax : check your syntax in %s" %conf_file
-except Exception,e:
+    print "wrong json syntax : check your syntax in %s" % conf_file
+except Exception, e:
     print str(e)
     sys.exit(0)
 
@@ -53,19 +65,23 @@ USERNAME = jc['USERNAME_d']
 PASSWORD = jc['PASSWORD_d']
 PROJECT_ID = jc['PROJECT_ID_d']
 AUTH_URL = jc['AUTH_URL']
-log_dir = os.path.join(homedir,jc['log_dir'])
-log_file = os.path.join(log_dir,jc['log_file'])
+sleeptime = jc['sleeptime']
+log_dir = jc['log_dir']
+log_file = os.path.join(log_dir, jc['log_file'])
+max_retries = jc['max_retries']
 
 if not os.path.isdir(log_dir):
-    print "%s log Directory not found"%log_dir
+    print "%s log Directory not found" % log_dir
     sys.exit(1)
 
-logf = open(log_file,'a')
+logf = open(log_file, 'a')
 
 nova = client.Client(USERNAME, PASSWORD, PROJECT_ID, AUTH_URL)
-    
-image_used = jc['image']
-image_id = nova.images.find(name=image_used).id
+neutron = neutronClient.Client(
+    username=USERNAME, password=PASSWORD, tenant_name=PROJECT_ID, auth_url=AUTH_URL)
+
+image_to_use = jc['image']
+image_id = nova.images.find(name=image_to_use).id
 
 flavor = jc['flavor']
 flavor_id = nova.flavors.find(name=flavor).id
@@ -75,55 +91,80 @@ network_pri_id = nova.networks.find(label='private').id
 keyname = jc['keyname']
 
 if not nova.keypairs.findall(name=keyname):
-    with open(os.path.join(conf_dir,keyname+".pub")) as fpubkey:
+    with open(os.path.join(conf_dir, keyname + ".pub")) as fpubkey:
         nova.keypairs.create(name=keyname, public_key=fpubkey.read())
 
-min_sleep = 10
-sleeptime = min_sleep + random.random()*30
-n = 1
-success = False
+tenant_id = nova.client.tenant_id
+instance_quota = nova.quotas.get(tenant_id).instances
+floatingip_quota = nova.quotas.get(tenant_id).floating_ips
+floating_ip_usage = len(nova.floating_ips.list())
+instance_usage = len(nova.servers.list())
+
+ext_net, = [x for x in neutron.list_networks()['networks'] if x[
+    'router:external']]
+args = dict(floating_network_id=ext_net['id'])
+
+got_ip = False
 while True:
-    try:
-        floating_ip = nova.floating_ips.create()
-    except Exception,e:
-        #TODO: consider logging
-        print "novaclient: No available IP", str(e)
-        time.sleep(20)
+    if instance_usage >= instance_quota:
+        mlog(logf, "Instance quota exceeded..I'm sleeping")
+        time.sleep(sleeptime)
         continue
-    instance_name = "vwn-"+floating_ip.ip.replace('.','-')
-#    instance_name = "test_"+str(n)
-    """create the instance"""
-    try:
-        instance = nova.servers.create(name=instance_name,
-                                       image=image_id, 
-                                       flavor=flavor_id,
-                                       nics=[{'net-id': network_pri_id}],
-                                       key_name=keyname)
-        success = True
-    except Exception,e:
-        mlog(logf, str(e))
-        success = False
-        """check the status of newly created instance, After sometime it changes status from 'BUILD' to 'ACTIVE'"""
-    
-    if not success:
-        mlog(logf, "sleeping for 10 seconds")
-        time.sleep(10)
-        continue
-
-    mlog(logf, "Creating server: "+instance_name)
-    mlog(logf, "Flavor: "+flavor)
-    mlog(logf, "Image: "+image_used)
-    mlog(logf, "Keypair name: "+keyname)
-
-    status = instance.status
-    while status == 'BUILD':
-        time.sleep(5)
-        instance = nova.servers.get(instance.id)
-        status = instance.status
-        mlog(logf, "status: %s" % status) 
-    
-    instance = nova.servers.find(name=instance_name)
-    instance.add_floating_ip(floating_ip)
-    mlog(logf, "DONE")
-    time.sleep(sleeptime)
-    n = n+1
+    else:
+        if floating_ip_usage >= floatingip_quota:
+            mlog(logf, "No available IP-Try to release Floating IP...Sleeping")
+            time.sleep(sleeptime)
+            continue
+        elif not got_ip:
+            ip_obj = neutron.create_floatingip(body={'floatingip': args})
+            ip = ip_obj['floatingip']['floating_ip_address']
+            ip_id = ip_obj['floatingip']['id']
+            floating_ip_usage = len(nova.floating_ips.list())
+            got_ip = True
+        instance_name = "vwn-" + ip.replace('.', '-')
+        try_number = 0
+        sleep_big = sleeptime + random.random() * 60
+        while try_number < max_retries:
+            try:
+                instance = nova.servers.create(name=instance_name,
+                                               image=image_id,
+                                               flavor=flavor_id,
+                                               nics=[
+                                                   {'net-id': network_pri_id}],
+                                               key_name=keyname)
+                instance_usage = len(nova.servers.list())
+            except Exception, e:
+                mlog(logf, str(e))
+                continue
+            mlog(logf, "Creating server: " + instance_name)
+            mlog(logf, "Flavor: " + flavor)
+            mlog(logf, "Image: " + image_to_use)
+            mlog(logf, "Keypair name: " + keyname)
+            """check the status of newly created instance, After sometime it changes status from 'BUILD' to 'ACTIVE'"""
+            status = instance.status
+            while status == 'BUILD':
+                time.sleep(sleeptime)
+                instance = nova.servers.get(instance.id)
+                status = instance.status
+                mlog(logf, "status: %s" % status)
+            if status == 'ACTIVE':
+                instance.add_floating_ip(ip)
+                mlog(logf, "DONE")
+                got_ip = False
+                break
+            elif status == 'ERROR':
+                try_number = try_number + 1
+                mlog(logf, "Error creating instance: try number : %d" % try_number)
+                nova.servers.delete(instance.id)
+                mlog(logf, "Deleting the instance: " + instance_name)
+                time.sleep(sleeptime)
+            if try_number >= max_retries:
+                try:
+                    mlog(logf, "Releasing the IP %s" % ip)
+                    neutron.delete_floatingip(ip_id)
+                    got_ip = False
+                    continue
+                except Exception, e:
+                    mlog(logf, str(e))
+        mlog(logf, "Sleeping for %d seconds" % sleep_big)
+        time.sleep(sleep_big)

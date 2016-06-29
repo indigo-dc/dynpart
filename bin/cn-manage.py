@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-CLOUD Manage enable/disable of nova compute service on compute node script
-Usage: Two formats
+Manage nova compute service i.e enable/disable compute service on compute node
+Usage: 
     python cn-manage.py --mode=enable --cnname=wn-206-01-01-02-b.cr.cnaf.infn.it --reason="test to enable"
     python cn-manage.py -mode enable -c wn-206-01-01-02-b.cr.cnaf.infn.it -r "test to enable"'''
 
@@ -9,93 +9,108 @@ Usage: Two formats
 
 
 """
-Algorithm logic
+Algorithm
 
-Take: The authentication parameters from the conf file and Mode=enable/diable, Compute Node name and reason from cmdline.
-Action: Enable/disable the nova compute service on compute node for a defined reason
+Take: The authentication parameters from the conf file and mode=enable|diable, CN name and reason from cmdline.
+Action: Enable|disable the nova compute service on compute node for a defined reason
 
 """
 
-import os,sys,time,getopt
+import os
+import sys
+import time
+import getopt
 import json
 from novaclient.v2 import client
 
-##TODO : make stong and error free argument matching
+# TODO : make stong and error free argument matching
 
 mode = ''
 cnname = ''
 reason = ''
 
+conf_file = '/etc/indigo/dynpart/dynp.conf'
+
+
 def now():
     """returns human readable date and time"""
     return time.ctime(time.time())
 
-def mlog(f,m,dbg=True):
+
+def mlog(f, m, dbg=True):
     """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    script_name = os.path.basename(sys.argv[0])
+    msg = "%s %s:" % (now(), script_name) + m
+    f.write(msg + '\n')
+    f.flush()
     if dbg:
-        f.write("%s: "%now()+m+'\n')
-        f.flush()    
-    
+        print msg
+
+
+def help():
+    print """ Usage: python cn-manage.py --mode=enable --cnname=wn-206-01-01-02-b.cr.cnaf.infn.it --reason="test to enable" OR
+python cn-manage.py -m enable -c wn-206-01-01-02-b.cr.cnaf.infn.it -r "test to enable"
+    Enable|disable the nova compute service on compute node for a defined reason
+"""
+
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"hm:c:r:",["mode=","cnname=","reason="])
+    opts, args = getopt.getopt(sys.argv[1:], "hm:c:r:", [
+                               "mode=", "cnname=", "reason="])
 except getopt.GetoptError:
-    print '''Usage: python cn-manage.py --mode=enable --cnname=wn-206-01-01-02-b.cr.cnaf.infn.it --reason="test to enable"
-    python cn-manage.py -mode enable -c wn-206-01-01-02-b.cr.cnaf.infn.it -r "test to enable"'''
+    help()
     sys.exit(2)
-    
+
+if len(sys.argv) <= 6:
+    help()
+    sys.exit(0)
+
 for opt, arg in opts:
     if opt == '-h':
-        print '''Usage: python cn-manage.py --mode=enable --cnname=wn-206-01-01-02-b.cr.cnaf.infn.it --reason="test to enable"
-        python cn-manage.py -mode enable -c wn-206-01-01-02-b.cr.cnaf.infn.it -r "test to enable"'''
+        help()
         sys.exit()
-    elif opt in ("-m","--mode"):
+    elif opt in ("-m", "--mode"):
         mode = arg
-    elif opt in ("-c","--cnname"):
+    elif opt in ("-c", "--cnname"):
         cnname = arg
-    elif opt in ("-r","--reason"):
+    elif opt in ("-r", "--reason"):
         reason = arg
 
-conf_dir = "/home/CMS/sonia.taneja/demo/etc/"
-conf_file = 'dynp.conf'
-
-jcf = os.path.join(conf_dir,conf_file)
-if not os.path.isfile(jcf):
-        print "%s file not found"%jcf
-        sys.exit(1)
-        
+if not os.path.isfile(conf_file):
+    print "%s file not found" % conf_file
+    sys.exit(1)
 
 try:
-    jc = json.load(open(jcf,'r'))
+    jc = json.load(open(conf_file, 'r'))
 except ValueError:
-    print "error while reading %s"%conf_file
+    print "error while reading %s" % conf_file
 except AttributeError:
-    print "wrong json syntax : check your syntax in %s" %conf_file
-except Exception,e:
+    print "wrong json syntax : check your syntax in %s" % conf_file
+except Exception, e:
     print str(e)
     sys.exit(0)
 
-"""Initialization from Conf file- Admin authentication"""
+"""Initialization from Conf file"""
 USERNAME = jc['USERNAME']
 PASSWORD = jc['PASSWORD']
 PROJECT_ID = jc['PROJECT_ID']
 AUTH_URL = jc['AUTH_URL']
-log_dir = jc['log_dir']
-log_file = jc['log_file']
 sleeptime = jc['sleeptime']
+log_dir = jc['log_dir']
+log_file = os.path.join(log_dir, jc['log_file'])
 
-log_fn = os.path.join(log_dir,log_file)
 if not os.path.isdir(log_dir):
-        print "%s file not found"%log_dir
-        sys.exit(1)
+    print "%s log directory not found" % log_dir
+    sys.exit(1)
 
-logf = open(log_fn,'a')
+logf = open(log_file, 'a')
 
 nova = client.Client(USERNAME, PASSWORD, PROJECT_ID, AUTH_URL)
 
 """Enabling/Disabling the compute service on host"""
 if (mode == "enable"):
     nova.services.enable(host=cnname, binary="nova-compute")
-    mlog(logf, "Enabled the Compute Node "+cnname)
+    mlog(logf, "Enabled the Compute Node " + cnname)
 elif (mode == "disable"):
-    nova.services.disable_log_reason(host=cnname,binary="nova-compute",reason=reason)
-    mlog(logf, 'Disabled the Compute Node '+cnname)
+    nova.services.disable_log_reason(
+        host=cnname, binary="nova-compute", reason=reason)
+    mlog(logf, 'Disabled the Compute Node ' + cnname)
