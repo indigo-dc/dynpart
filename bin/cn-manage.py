@@ -1,20 +1,4 @@
 #!/usr/bin/env python
-"""
-Manage nova compute service i.e enable/disable compute service on compute node
-Usage: 
-    python cn-manage.py --mode=enable --cnname=wn-206-01-01-02-b.cr.cnaf.infn.it --reason="test to enable"
-    python cn-manage.py -mode enable -c wn-206-01-01-02-b.cr.cnaf.infn.it -r "test to enable"'''
-
-"""
-
-
-"""
-Algorithm
-
-Take: The authentication parameters from the conf file and mode=enable|diable, CN name and reason from cmdline.
-Action: Enable|disable the nova compute service on compute node for a defined reason
-
-"""
 
 import os
 import sys
@@ -23,6 +7,22 @@ import getopt
 import json
 from novaclient.v2 import client
 
+"""
+Manage nova compute service i.e enable/disable compute service on CN
+Usage:
+python cn-manage.py --mode=enable --cnname=wn-name --reason="test" OR
+python cn-manage.py -mode enable -c wn-name -r "test"'''
+
+"""
+
+"""
+Algorithm
+
+Take: The authentication parameters from the conf file
+and mode=enable|diable, CN name and reason from cmdline
+Action: Enable|disable the nova compute service on CN for a defined reason
+
+"""
 # TODO : make stong and error free argument matching
 
 mode = ''
@@ -38,7 +38,8 @@ def now():
 
 
 def mlog(f, m, dbg=True):
-    """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    """mlog(<file>,log message[,dbg=True]) ->
+    append one log line to <file> if dbg == True"""
     script_name = os.path.basename(sys.argv[0])
     msg = "%s %s:" % (now(), script_name) + m
     f.write(msg + '\n')
@@ -48,9 +49,9 @@ def mlog(f, m, dbg=True):
 
 
 def help():
-    print """ Usage: python cn-manage.py --mode=enable --cnname=wn-206-01-01-02-b.cr.cnaf.infn.it --reason="test to enable" OR
-python cn-manage.py -m enable -c wn-206-01-01-02-b.cr.cnaf.infn.it -r "test to enable"
-    Enable|disable the nova compute service on compute node for a defined reason
+    print """Usage: python cn-manage.py --mode=enable --cnname=wn-name --reason="test" OR
+    python cn-manage.py -m enable -c wn-name -r "test"
+    Enable|disable the nova compute service on CN for a defined reason
 """
 
 try:

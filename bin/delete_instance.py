@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+
+import os
+import sys
+import time
+import json
+from novaclient.v2 import client
+from neutronclient.v2_0 import client as neutronClient
+
 """
 stop and delete an instance
 Usage: Usage: delete_instance.py <name-of-the-instance>
@@ -9,17 +17,11 @@ Usage: Usage: delete_instance.py <name-of-the-instance>
 """
 Algorithm
 
-Take: The authentication parameters from the conf file and name of the instance from cmdline
+Take: The authentication parameters from the conf file
+and name of the instance from cmdline
 Does: Stops, deletes the instance and releases the IP
 
 """
-
-import os
-import sys
-import time
-import json
-from novaclient.v2 import client
-from neutronclient.v2_0 import client as neutronClient
 
 
 def now():
@@ -28,7 +30,8 @@ def now():
 
 
 def mlog(f, m, dbg=True):
-    """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    """mlog(<file>,log message[,dbg=True]) ->
+    append one log line to <file> if dbg == True"""
     script_name = os.path.basename(sys.argv[0])
     msg = "%s %s:" % (now(), script_name) + m
     f.write(msg + '\n')
@@ -38,8 +41,8 @@ def mlog(f, m, dbg=True):
 
 
 def help():
-    print """"usage: delete_instance.py <name-of-the-instance> \n                                                                                               
-Stops, deletes the instance and releases the IP
+    print """"usage: delete_instance.py <name-of-the-instance> \n
+    Stops, deletes the instance and releases the IP
 """
 
 conf_file = '/etc/indigo/dynpart/dynp.conf'
@@ -74,8 +77,10 @@ if not os.path.isdir(log_dir):
 logf = open(log_file, 'a')
 
 nova = client.Client(USERNAME, PASSWORD, PROJECT_ID, AUTH_URL)
-neutron = neutronClient.Client(
-    username=USERNAME, password=PASSWORD, tenant_name=PROJECT_ID, auth_url=AUTH_URL)
+neutron = neutronClient.Client(username=USERNAME,
+                               password=PASSWORD,
+                               tenant_name=PROJECT_ID,
+                               auth_url=AUTH_URL)
 
 try:
     instance_name = sys.argv[1]

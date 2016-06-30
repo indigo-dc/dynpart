@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 
-# queste cose da mettere in file conf
+import os
+import sys
+import time
+import random
+import commands
 
+# queste cose da mettere in file conf
 
 cmd_sleep = 10
 queue = 'short'
@@ -13,11 +18,6 @@ min_pend = 50
 avg_sleep = 280
 nap = 5
 
-import os
-import sys
-import time
-import random
-import commands
 
 sleeptime = lambda: cmd_sleep + int(random.random() * avg_sleep)
 

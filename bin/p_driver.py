@@ -1,17 +1,4 @@
 #!/usr/bin/env python
-"""                                                        
-Partition director : Manages the switching of role and status of nodes from Batch to Cloud or Viceversa
-Usage: p_driver.py                                                                              
-                                                                                                                                                                 
-"""
-
-"""                                                                             
-Algorithm                                                                                                                            
-                                                                                                                                                         
-Assume: Status of nodes is defined in a given json file            
-Take: Json dictionary from json file                                                      
-Does: Manages the switching of role and status of nodes from Batch to Cloud or Viceversa
-"""
 
 import os
 import sys
@@ -20,6 +7,23 @@ import json
 import commands
 from novaclient.v2 import client
 from neutronclient.v2_0 import client as neutronClient
+
+"""
+Partition director : Manages the switching of role and
+status of nodes from/to Batch/Cloud
+
+Usage: p_driver.py
+
+"""
+
+"""
+Algorithm
+
+Assume: Status of nodes is defined in a given json file
+Take: Json dictionary from json file
+Does: Manages the switching of role and status of nodes from/to Batch/Cloud
+"""
+
 
 conf_file = '/etc/indigo/dynpart/dynp.conf'
 
@@ -30,7 +34,8 @@ def now():
 
 
 def mlog(f, m, dbg=True):
-    """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    """mlog(<file>,log message[,dbg=True]) ->
+    append one log line to <file> if dbg == True"""
     script_name = os.path.basename(sys.argv[0])
     msg = "%s %s:" % (now(), script_name) + m
     f.write(msg + '\n')
@@ -40,7 +45,8 @@ def mlog(f, m, dbg=True):
 
 
 def get_jsondict(json_file):
-    """get_jsondict(<file>) -> Returns python dictionary object from JSON file """
+    """get_jsondict(<file>) ->
+    Returns python dictionary object from JSON file """
     try:
         batch_cloud_dict = json.load(open(json_file, 'r'))
     except:
@@ -57,7 +63,9 @@ def count_N_vm(hostN):
 
 
 def make_switch(hostN, X, Y):
-    """make_switch(<host>,list X,list Y) -> Switch the <host> from list X to list Y i.e append <host> to list X and removes the same from list Y and returns the updated lists """
+    """make_switch(<host>,list X,list Y) ->
+    Switch the <host> from list X to list Y i.e append <host> to list X and
+    removes the same from list Y and returns the updated lists """
     X.append(hostN)
     while hostN in Y:
         Y.remove(hostN)
@@ -65,7 +73,9 @@ def make_switch(hostN, X, Y):
 
 
 def check_c2b(batch_cloud_dict):
-    """check_c2b(<dict>) -> Checks each host in C2B if it is ready for switch and makes the switch when either host has #VM's = 0 or time now > TTL, Returns the updated <dict>"""
+    """check_c2b(<dict>) ->
+    Checks each host in C2B if it is ready for switch and makes the switch when
+    either host has #VM's = 0 or time now > TTL, Returns the updated <dict>"""
     job_features_dir = jc['machine_job_feature']['TTL_filepath']
     c2b_copy = batch_cloud_dict['C2B'][:]
     for hostN in c2b_copy:
@@ -106,7 +116,9 @@ def disable_nova(hostN):
 
 
 def check_b2c(batch_cloud_dict):
-    """check_b2c(<dict>) -> Checks each host in B2C if it is ready for switch and makes the switch when host has #Running_jobs = 0, Returns the updated <dict>"""
+    """check_b2c(<dict>) ->
+    Checks each host in B2C if it is ready for switch and makes the switch when
+    host has #Running_jobs = 0, Returns the updated <dict>"""
     mcjobs_r = jc["mcjobs_r"]
     rj_file = jc['rj_file']
     cmd = """%s x >> %s""" % (mcjobs_r, rj_file)
@@ -181,8 +193,10 @@ if not os.path.isdir(log_dir):
 logf = open(log_file, 'a')
 
 nova = client.Client(USERNAME, PASSWORD, PROJECT_ID, AUTH_URL)
-neutron = neutronClient.Client(
-    username=USERNAME, password=PASSWORD, tenant_name=PROJECT_ID, auth_url=AUTH_URL)
+neutron = neutronClient.Client(username=USERNAME,
+                               password=PASSWORD,
+                               tenant_name=PROJECT_ID,
+                               auth_url=AUTH_URL)
 
 batch_cloud_dict['C2B'] = list(
     set(batch_cloud_dict['C2BR']) | set(batch_cloud_dict['C2B']))
@@ -190,7 +204,7 @@ batch_cloud_dict['C2B'] = list(
 C2B = batch_cloud_dict['C2B']
 for hostN in C2B:
     disable_nova(hostN)
-    if not batch_cloud_dict['C2B_TTL'].has_key(hostN):
+    if hostN not in batch_cloud_dict['C2B_TTL']:
         batch_cloud_dict['C2B_TTL'][hostN] = ttl
         job_features_dir = jc['machine_job_feature']['TTL_filepath']
 
