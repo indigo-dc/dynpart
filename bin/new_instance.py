@@ -1,6 +1,14 @@
 #!/usr/bin/env python
+
+import os
+import sys
+import time
+import json
+from novaclient.v2 import client
+from neutronclient.v2_0 import client as neutronClient
+
 """
-create and start up a new instance with name in the format vwn-<ip_seperated_with_dash>
+create and starts a new instance named vwn-<ip_seperated_with_dash>
 Usage: new_instance.py
 
 """
@@ -10,15 +18,10 @@ Algorithm logic
 
 Assume: Image, flavor and keypair is defined in the conf file
 Take: The authentication parameters from the conf file
-Does: Creates and start up a new instance with name in the format vwn-<ip_seperated_with_dash>. In case of Error state it tries for max_tries before releasing the IP.
+Does: Creates and starts a new instance named vwn-<ip_seperated_with_dash>
+In case of Error state it tries for max_tries before releasing the IP
 
 """
-import os
-import sys
-import time
-import json
-from novaclient.v2 import client
-from neutronclient.v2_0 import client as neutronClient
 
 conf_file = '/etc/indigo/dynpart/dynp.conf'
 
@@ -29,7 +32,8 @@ def now():
 
 
 def mlog(f, m, dbg=True):
-    """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    """mlog(<file>,log message[,dbg=True]) ->
+    append one log line to <file> if dbg == True"""
     script_name = os.path.basename(sys.argv[0])
     msg = "%s %s:" % (now(), script_name) + m
     f.write(msg + '\n')
@@ -39,8 +43,9 @@ def mlog(f, m, dbg=True):
 
 
 def help():
-    print """"usage: new_instance.py \n                                                                                                                      
-Creates and start up a new instance with name in the format vwn-<ip_seperated_with_dash>. In case of Error state it tries for max_tries before releasing the IP.
+    print """"usage: new_instance.py \n
+Creates and starts a new instance named vwn-<ip_seperated_with_dash>
+In case of Error state it tries for max_tries before releasing the IP
 """
 
 if not os.path.isfile(conf_file):
@@ -74,8 +79,10 @@ if not os.path.isdir(log_dir):
 logf = open(log_file, 'a')
 
 nova = client.Client(USERNAME, PASSWORD, PROJECT_ID, AUTH_URL)
-neutron = neutronClient.Client(
-    username=USERNAME, password=PASSWORD, tenant_name=PROJECT_ID, auth_url=AUTH_URL)
+neutron = neutronClient.Client(username=USERNAME,
+                               password=PASSWORD,
+                               tenant_name=PROJECT_ID,
+                               auth_url=AUTH_URL)
 
 ext_net, = [x for x in neutron.list_networks()['networks'] if x[
     'router:external']]
@@ -107,7 +114,7 @@ if not nova.keypairs.findall(name=keyname):
 success = False
 try_number = 0
 """create the instance"""
-while success == False and try_number < max_retries:
+while success is False and try_number < max_retries:
     try:
         instance = nova.servers.create(name=instance_name,
                                        image=image_id,
@@ -130,7 +137,8 @@ while success == False and try_number < max_retries:
 
     status = instance.status
 
-    """check the status of newly created instance, After sometime it changes status from 'BUILD' to 'ACTIVE'"""
+    """check the status of newly created instance
+    until status changes from 'BUILD' to 'ACTIVE'"""
     while status == 'BUILD':
         time.sleep(sleeptime)
         instance = nova.servers.get(instance.id)
@@ -144,7 +152,7 @@ while success == False and try_number < max_retries:
     elif status == 'ERROR':
         success = False
         try_number = try_number + 1
-        mlog(logf, "Error creating instance: try number : %d" % try_number)
+        mlog(logf, "Error creating instance-try : %d" % try_number)
         mlog(logf, "Deleting the instance: " + instance_name)
         nova.servers.delete(instance.id)
 

@@ -1,6 +1,16 @@
 #!/usr/bin/env python
+
+import os
+import sys
+import time
+import random
+import json
+from novaclient.v2 import client
+from neutronclient.v2_0 import client as neutronClient
+
 """
-creates and start up many instances with name in the format vwn-<ip_seperated_with_dash> in a loop with random (in order of 1 min) sleep time
+creates and starts many instances named vwn-<ip_seperated_with_dash>
+in a loop with random (in order of 1 min) sleep time
 Usage: create_instances.py
 
 """
@@ -11,17 +21,9 @@ Algorithm
 
 Assume: Image, flavor and keypair is defined in the conf file
 Take: The authentication parameters from the conf file
-Does:  Creates and start up many instance with name in the format vwn-<ip_seperated_with_dash>. In case of Error state it tries for max_tries before releasing the IP.
-
+Does:  Creates and starts many instance named vwn-<ip_seperated_with_dash>
+In case of Error state it tries for max_tries before releasing the IP
 """
-
-import os
-import sys
-import time
-import random
-import json
-from novaclient.v2 import client
-from neutronclient.v2_0 import client as neutronClient
 
 conf_file = '/etc/indigo/dynpart/dynp.conf'
 
@@ -32,7 +34,8 @@ def now():
 
 
 def mlog(f, m, dbg=True):
-    """mlog(<file>,log message[,dbg=True]) -> append one log line to <file> if dbg == True"""
+    """mlog(<file>,log message[,dbg=True]) ->
+    append one log line to <file> if dbg == True"""
     script_name = os.path.basename(sys.argv[0])
     msg = "%s %s:" % (now(), script_name) + m
     f.write(msg + '\n')
@@ -42,8 +45,9 @@ def mlog(f, m, dbg=True):
 
 
 def help():
-    print """"usage: create_instances.py \n                                                                                                                                      
-Creates and start up many instance with name in the format vwn-<ip_seperated_with_dash>. In case of Error state it tries for max_tries before releasing the IP.
+    print """"usage: create_instances.py \n
+Creates and starts many instance named vwn-<ip_seperated_with_dash>
+In case of Error state it tries for max_tries before releasing the IP
 """
 
 if not os.path.isfile(conf_file):
@@ -77,8 +81,10 @@ if not os.path.isdir(log_dir):
 logf = open(log_file, 'a')
 
 nova = client.Client(USERNAME, PASSWORD, PROJECT_ID, AUTH_URL)
-neutron = neutronClient.Client(
-    username=USERNAME, password=PASSWORD, tenant_name=PROJECT_ID, auth_url=AUTH_URL)
+neutron = neutronClient.Client(username=USERNAME,
+                               password=PASSWORD,
+                               tenant_name=PROJECT_ID,
+                               auth_url=AUTH_URL)
 
 image_to_use = jc['image']
 image_id = nova.images.find(name=image_to_use).id
@@ -140,7 +146,8 @@ while True:
             mlog(logf, "Flavor: " + flavor)
             mlog(logf, "Image: " + image_to_use)
             mlog(logf, "Keypair name: " + keyname)
-            """check the status of newly created instance, After sometime it changes status from 'BUILD' to 'ACTIVE'"""
+            """check the status of newly created instance
+            until status changes from 'BUILD' to 'ACTIVE'"""
             status = instance.status
             while status == 'BUILD':
                 time.sleep(sleeptime)
@@ -154,7 +161,7 @@ while True:
                 break
             elif status == 'ERROR':
                 try_number = try_number + 1
-                mlog(logf, "Error creating instance: try number : %d" % try_number)
+                mlog(logf, "Error creating instance-try : %d" % try_number)
                 nova.servers.delete(instance.id)
                 mlog(logf, "Deleting the instance: " + instance_name)
                 time.sleep(sleeptime)
