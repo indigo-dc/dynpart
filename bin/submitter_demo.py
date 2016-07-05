@@ -5,22 +5,25 @@ import sys
 import time
 import random
 import commands
+import json
 
 # queste cose da mettere in file conf
 
-cmd_sleep = 10
-queue = 'short'
 
-sub_cmd = 'bsub -q %s "/bin/sleep %%d"' % (queue)
+conf_file = '/etc/indigo/dynpart/dynp.conf'
 
-max_pend = 300
-min_pend = 50
-avg_sleep = 280
-nap = 5
+jconf = json.load(open(conf_file,'r'))
 
+jc = jconf["batch_submitter"]
+cmd_sleep = jc['cmd_sleep']
+queue = jc['queue']
+max_pend = jc['max_pend']
+min_pend = jc['min_pend']
+avg_sleep = jc['avg_sleep']
+nap = jc['nap']
 
-sleeptime = lambda: cmd_sleep + int(random.random() * avg_sleep)
-
+def sleeptime(avg_nap = avg_sleep):
+    return int(random.random() * avg_nap)
 
 def get_pend(queue):
     e, o = commands.getstatusoutput('bqueues %s' % queue)
@@ -28,14 +31,18 @@ def get_pend(queue):
         return -1
     return int(o.split()[-3])
 
+json.load(open(conf_file, 'r'))
+
+cmd = "bsub -q %s 'sleep %%d'" % (queue)
+
 while True:
     np = get_pend(queue)
     print "pending jobs:", np
     if np < 5:
         for n in range(max_pend):
-            cmd = sub_cmd % sleeptime()
-            print "Executing: %s" % cmd
-            e, o = commands.getstatusoutput(cmd)
+            sub_cmd = cmd % sleeptime(avg_sleep)
+            print "Executing: %s" % sub_cmd
+            e, o = commands.getstatusoutput(sub_cmd)
             if e:
                 print "Error submitting job"
             time.sleep(1)
