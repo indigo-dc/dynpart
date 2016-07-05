@@ -12,7 +12,7 @@ import json
 
 conf_file = '/etc/indigo/dynpart/dynp.conf'
 
-jconf = json.load(open(conf_file,'r'))
+jconf = json.load(open(conf_file, 'r'))
 
 jc = jconf["batch_submitter"]
 cmd_sleep = jc['cmd_sleep']
@@ -22,8 +22,10 @@ min_pend = jc['min_pend']
 avg_sleep = jc['avg_sleep']
 nap = jc['nap']
 
-def sleeptime(avg_nap = avg_sleep):
+
+def sleeptime(avg_nap=avg_sleep):
     return int(random.random() * avg_nap)
+
 
 def get_pend(queue):
     e, o = commands.getstatusoutput('bqueues %s' % queue)
