@@ -80,9 +80,9 @@ except Exception, e:
     print str(e)
     sys.exit(0)
 
-log_dir = jc['log_dir']
-log_file = os.path.join(log_dir, jc['log_file'])
-batch_cloud_json = jc['batch_cloud_json']
+log_dir = jc['logging']['log_dir']
+log_file = os.path.join(log_dir, jc['logging']['log_file'])
+batch_cloud_json = jc['switch']['batch_cloud_json']
 batch_cloud_dict = get_jsondict(batch_cloud_json)
 
 if not os.path.isdir(log_dir):

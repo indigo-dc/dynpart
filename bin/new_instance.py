@@ -63,14 +63,13 @@ except Exception, e:
     sys.exit(0)
 
 """Initialization from Conf file"""
-USERNAME = jc['USERNAME_d']
-PASSWORD = jc['PASSWORD_d']
-PROJECT_ID = jc['PROJECT_ID_d']
-AUTH_URL = jc['AUTH_URL']
-sleeptime = jc['sleeptime']
-log_dir = jc['log_dir']
-log_file = os.path.join(log_dir, jc['log_file'])
-max_retries = jc['max_retries']
+USERNAME = jc['auth']['USERNAME_d']
+PASSWORD = jc['auth']['PASSWORD_d']
+PROJECT_ID = jc['auth']['PROJECT_ID_d']
+AUTH_URL = jc['auth']['AUTH_URL']
+
+log_dir = jc['logging']['log_dir']
+log_file = os.path.join(log_dir, jc['logging']['log_file'])
 
 if not os.path.isdir(log_dir):
     print "%s log directory not found" % log_dir
@@ -97,20 +96,23 @@ except Exception, e:
 
 instance_name = "vwn-" + ip.replace('.', '-')
 
-image_to_use = jc['image']
+image_to_use = jc['VM_conf']['image']
 image_id = nova.images.find(name=image_to_use).id
 
-flavor = jc['flavor']
+flavor = jc['VM_conf']['flavor']
 flavor_id = nova.flavors.find(name=flavor).id
 
 network_pri_id = nova.networks.find(label='private').id
 
-keyname = jc['keyname']
+keyname = jc['VM_conf']['keyname']
+conf_dir = os.path.dirname(conf_file)
 
 if not nova.keypairs.findall(name=keyname):
     with open(os.path.join(conf_dir, keyname + ".pub")) as fpubkey:
         nova.keypairs.create(name=keyname, public_key=fpubkey.read())
 
+max_retries = jc['VM_conf']['max_retries']
+sleeptime = jc['VM_conf']['sleeptime']
 success = False
 try_number = 0
 """create the instance"""
