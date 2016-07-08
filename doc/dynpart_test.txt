@@ -1,0 +1,43 @@
+How to test Dynamic Partition functionalities
+
+- prerequisites
+
+The Dynamic Partition (dynp) assumes that one batch system cluster
+(LSF only, currently) and one Openstack instance (current release) are
+deployed and working. Physical machines can be member of the LSF or
+the Openstack cluster in a mutually exclusive manner.
+
+Functionalities:
+
+- switch role of selected physical machines from the LSF cluster to
+  the Openstack one.
+
+- switch role of selected physical machines from the Openstack cluster
+  to the LSF one.
+
+- manage intermediate transition statuses, ensure consistency
+
+Components:
+
+- elim.dynp
+
+This is a custom External Load Information Manager, specific to
+LSF,created to enable implementation of the Functionalities and
+conformant to the LSF guidelines. It assumes to be properly configured
+at batch system side.
+
+- p_switch.py <to_cloud|to_batch> <filename>
+
+This tool triggers role switching for hosts from Batch to Cloud or
+vice-versa.  It is provided with a file contining a list of hostnames
+whose role is to be switched
+
+- p_driver.py
+
+This script checks for status changes of each host under transition
+and takes needed action accordingly. For example, when a host
+switching from Batch to Cloud has no more running jobs, it is enabled
+to Openstack as a new hypervisor, and from then on, new VM can be
+instantiated there by the Nova component.
+
+
