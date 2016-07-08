@@ -119,8 +119,8 @@ def check_b2c(batch_cloud_dict):
     """check_b2c(<dict>) ->
     Checks each host in B2C if it is ready for switch and makes the switch when
     host has #Running_jobs = 0, Returns the updated <dict>"""
-    mcjobs_r = jc["mcjobs_r"]
-    rj_file = jc['rj_file']
+    mcjobs_r = jc['switch']["mcjobs_r"]
+    rj_file = jc['switch']['rj_file']
     cmd = """%s x >> %s""" % (mcjobs_r, rj_file)
     e, o = commands.getstatusoutput(cmd)
     if e or o.endswith('No matching job found'):
@@ -173,18 +173,20 @@ except Exception, e:
     print str(e)
     sys.exit(0)
 
-USERNAME = jc['USERNAME']
-PASSWORD = jc['PASSWORD']
-PROJECT_ID = jc['PROJECT_ID']
-AUTH_URL = jc['AUTH_URL']
-ttl_period = int(jc['ttl_period'])
-log_dir = jc['log_dir']
-log_file = os.path.join(log_dir, jc['log_file'])
+USERNAME = jc['auth']['USERNAME']
+PASSWORD = jc['auth']['PASSWORD']
+PROJECT_ID = jc['auth']['PROJECT_ID']
+AUTH_URL = jc['auth']['AUTH_URL']
+
+batch_cloud_json = jc['switch']['batch_cloud_json']
+batch_cloud_dict = get_jsondict(batch_cloud_json)
+
+ttl_period = int(jc['switch']['ttl_period'])
 exe_time = time.time()
 ttl = int(exe_time + ttl_period)
 
-batch_cloud_json = jc['batch_cloud_json']
-batch_cloud_dict = get_jsondict(batch_cloud_json)
+log_dir = jc['logging']['log_dir']
+log_file = os.path.join(log_dir, jc['logging']['log_file'])
 
 if not os.path.isdir(log_dir):
     print "%s log directory not found" % log_dir

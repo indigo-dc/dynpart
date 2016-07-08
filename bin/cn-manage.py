@@ -91,13 +91,13 @@ except Exception, e:
     sys.exit(0)
 
 """Initialization from Conf file"""
-USERNAME = jc['USERNAME']
-PASSWORD = jc['PASSWORD']
-PROJECT_ID = jc['PROJECT_ID']
-AUTH_URL = jc['AUTH_URL']
-sleeptime = jc['sleeptime']
-log_dir = jc['log_dir']
-log_file = os.path.join(log_dir, jc['log_file'])
+USERNAME = jc['auth']['USERNAME']
+PASSWORD = jc['auth']['PASSWORD']
+PROJECT_ID = jc['auth']['PROJECT_ID']
+AUTH_URL = jc['auth']['AUTH_URL']
+
+log_dir = jc['logging']['log_dir']
+log_file = os.path.join(log_dir, jc['logging']['log_file'])
 
 if not os.path.isdir(log_dir):
     print "%s log directory not found" % log_dir
