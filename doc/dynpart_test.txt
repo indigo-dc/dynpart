@@ -37,7 +37,63 @@ whose role is to be switched
 This script checks for status changes of each host under transition
 and takes needed action accordingly. For example, when a host
 switching from Batch to Cloud has no more running jobs, it is enabled
-to Openstack as a new hypervisor, and from then on, new VM can be
+to Openstack as hypervisor, and from then on, new VM can be
 instantiated there by the Nova component.
+
+Testing the Partition director
+
+testing has the purpose of verify that your setup is correct. It
+assumes that all the needed steps to deploy and configure the
+Partition Director have been seccesfully executed.
+
+Checklist
+
+LOGIN
+
+0) log into a director host (where p_driver.py and p_switch.py are
+installed) as a user supposed to manage the partition (demo@pdir in
+the following)
+
+ELIM AND LSF CONFIGURATION
+
+1) check that hosts are partition aware
+
+lsload -l | head
+
+the "dynp" load index should be displayed in the header output
+line. If not, there is a problem in your LSF configuration.
+
+2) check which hosts are member of the batch partition:
+
+demo@pdir ~$ bhosts -w -R "select [dynp==1]"
+HOST_NAME          STATUS          JL/U    MAX  NJOBS    RUN  SSUSP  USUSP    RSV 
+wn-206-01-01-02-b  ok              -     16      0      0      0      0      0
+
+3) check which hosts are member of the cloud partition:
+ bhosts -w -R "select [dynp==2]"
+
+Alternatively,
+lsload -l -R "select [dynp==2]"
+can also be used.
+
+If both step 2 and 3 show no hosts, there is a problem in the
+configuration for elim.dynp setup.
+
+CHECK SWITCH CAPABILITIES
+
+Role switching might be trivial in a unused cluster. To simulate
+concurrent activity two tools are provided:
+
+- submitter_demo.py
+keep submitting jobs to a specified queue
+
+- create_instances.py
+keep requesting VM instantiation to openstack
+
+launch the two scripts from a 
+
+
+4) From Batch to Cloud
+
 
 
