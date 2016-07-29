@@ -1,0 +1,11 @@
+#!/bin/sh
+if test "x$LSB_SUB_PARM_FILE" == "x"; then
+   exit 0
+fi
+
+. $LSB_SUB_PARM_FILE
+
+exec 1>&2
+
+echo "LSB_SUB_RES_REQ=\"select [dynp!=2]\"" > $LSB_SUB_MODIFY_FILE
+
