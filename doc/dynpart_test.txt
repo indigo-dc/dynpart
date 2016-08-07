@@ -88,12 +88,117 @@ concurrent activity two tools are provided:
 keep submitting jobs to a specified queue
 
 - create_instances.py
-keep requesting VM instantiation to openstack
 
-launch the two scripts from a 
+keep requesting VM instantiation to openstack at a regular rate.
 
+Launch the two scripts from a manager node in the cluster (i.e. a Cloud Controller as unprivileged user) 
 
 4) From Batch to Cloud
+
+- select one or more nodes in the batch partition of the lsf cluster. You can
+identify them using the command:
+
+bhosts -w -R "select [dynp==1]"
+
+- create a file (e.g.  nodes.txt ) with the name of the selected nodes in it.
+
+- execute once the p_switch.py nodes.txt
+
+- verify that the the selected nodes are now members of the "B2CR"
+  list in the farm.json status file.
+
+- execute once the p_driver.py script
+
+- verify that the selected nodes are now members of the "B2C"
+  list in the farm.json status file.
+
+- verify that after a little while (few seconds to few minutes) the
+  dynp Load Index has an updated value. You can check it with
+
+lsload -l <hostname_1> ... <hostname_n>
+
+  the dynp External Load Index should change the value to 2.
+
+- verify that no more new jobs are dispatched by LSF to the selected nodes.
+You can check this by:
+
+bhosts -w <hostname_1> ... <hostname_n>
+
+or
+
+bjobs -u all -w -r -m "<hostname_1> ... <hostname_n>"
+
+You should see that the number of running jobs in the selected nodes
+is decreasing only.
+
+- execute a few times the p_driver.py script (wait at least a few seconds between two runs)
+
+You should see (inspecting logfiles) that no action is taken.
+
+when a host has no more running jobs, execute p_driver.py
+
+You should see that:
+- that host is enabled as Compute Node in Openstack
+- the host is now member of the "C" list in the farm.json status file
+- provided that create_instances.py is running, you see VMs being instantiated by OpenStack in the newly enabled CN.
+
+This completes the (individual) role switching of the host.
+
+5) From Cloud to Batch
+
+- select one or more Compute Nodes in the cloud partition of OpenStack.
+
+- verify first that their dynp External Load Indicator is set to 2 with the batch command:
+lsload -l <host_1> ... <host_n>
+
+alternatively, verify that the hosts are listed by the following command:
+bhosts -w -R "select [dynp==2]" 
+
+- create a file (e.g.  nodes.txt ) with the name of the selected nodes in it.
+
+- execute once the p_switch.py nodes.txt
+
+- verify that the the selected nodes are now members of the "C2BR"
+  list in the farm.json status file.
+
+- execute once the p_driver.py script
+
+- verify that:
+
+-- the Compute Node has been disabled, so that no new VM can be
+  instantiated to it
+
+-- selected nodes are now members of the "C2B" list in the farm.json
+  status file.
+
+-- the dynp Load Index remains at previous value, 2.
+
+-- verify that a TTL file exists for each selected node, in the shared
+   filesystem. File content is a epoch timestamp in the future. It
+   indicates a deadline after which the VM can be destroyed.
+
+- Run p_driver.py script a few times, and, in the meanwhile
+- From the dashboard, halt or destroy each running VM on one selected node.
+
+- verify that:
+
+-- the selected node is now member of the "B" list in the farm.json
+   status file.
+
+-- shortly after, the dynp Load Index switches from 2 to 1.
+
+-- Batch jobs are dispatched to the selected node and begin to run.
+
+- If another selected host exists, having running VMs
+-- Run p_driver.py script a few times
+
+- verify (by inspecting logfiles) that at each run the presence of
+  running VMs is considered, together with the expiration time in the
+  TTL file.
+
+- verify that, When the TTL expires, the VMs are destroyed.
+
+This completes the role switching of hosts from Cloud to Batch.
 
 
 
