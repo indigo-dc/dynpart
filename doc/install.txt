@@ -1,0 +1,126 @@
+Dynamic partition Working principles
+
+Physical machines are members of a Batch System cluster (LSF) and a
+Cloud (Openstack) cluster at the same time; furthermore, they can only be
+active in a mutually exclusive manner on one and one only cluster at
+any time. This implicitly defines a partition of hosts active at batch
+or cloud side.
+
+We refer to active Hosts in the batch partition as "Worker Nodes", and
+to active hosts in the cloud partition as "Compute Nodes".
+
+A Partition driver is a software component dealing with transition
+requests: it performs the needed steps to convert a host from WN to CN
+or from CN to WN. Note that nodes are not removed from one cluster, nor
+joined the another; they are simply made active on the target cluster and
+inactive in the origin cluster.
+
+To do so:
+
+- At cloud side
+
+-- Compute Nodes are Enabled / Disabled using OpenStack APIs
+
+- At Batch side
+
+-- Worker Nodes are configured to publish a numeric status value
+   (External Load Index) named dynp, indicating the partition they
+   belong to.
+
+-- LSF Master is configured to alter job parameters at submission time,
+   adding the requirement for a node having the correct value of dynp
+
+
+
+Deployment instructions
+
+1. Assumptions
+
+This guide assumes that:
+
+- A properly configured Batch System instance is operational
+  (currently LSF, version 7.x or newer)
+
+- A working OpenStack instance is in place, with a Cloud Controller as
+  privileged member of the LSF cluster.
+
+- Cluster members (WN and CN) have read access to a shared filesystem
+ ( mounted as LSF_TOP=/usr/share/lsf for the sake of example )
+
+
+2. Deploy scripts and configurations
+
+from the LSF master:
+
+create directories and deploy files:
+
+- mkdir -p $LSF_TOP/var/tmp/cloudside/
+- mkdir -p $LSF_TOP/var/tmp/batchside/
+- mkdir -p $LSF_TOP/conf/scripts/dynpart/
+
+cp dynpart.conf elim.dynp esub.dynp mcjobs_r.c $LSF_TOP/conf/scripts/dynpart/
+cp farm.json $LSF_TOP/var/tmp/cloudside/
+
+ln -s $LSF_TOP/conf/scripts/dynpart/elim.dynp $LSF_SERVERDIR/elim.dynp
+ln -s $LSF_TOP/conf/scripts/dynpart/esub.dynp $LSF_SERVERDIR/esub.dynp
+
+Compile the C program
+
+The mcjobs_r.c C program queries LSF through its APIs to retrieve the
+list of running jobs on each host. Pre compiled binary cannot be
+distributed due to licensing constraints, thus it must be compiled
+locally.  Following is an example compile command, on LSF9.1; adapt to
+your specific setup.
+
+cd $LSF_TOP/conf/scripts/dynpart/
+gcc mcjobs_r.c -I/usr/share/lsf/9.1/include/ /usr/share/lsf/9.1/linux2.6-glibc2.3-x86_64/lib/libbat.a /usr/share/lsf/9.1/linux2.6-glibc2.3-x86_64/lib/liblsf.a -lm -lnsl -ldl -o mcjobs_r
+
+
+Edit LSF configuration files
+
+/usr/share/lsf/conf/lsf.cluster.<clustername>
+
+In the Host section specify usage of the dynp elim on each WN participating in the dynamic partitioning
+Following is an example Host section:
+
+Begin   Host
+HOSTNAME  model    type        server r1m  mem  swp  RESOURCES    #Keywords
+
+# lsf master
+lsf9test   !   !   1   3.5   ()   ()   (mg)
+
+#Cloud Controller for Dynamic Partitioning
+t1-cloudcc-02   ! ! 1 3.5 () () (mg)
+
+wn-206-01-01-01-b ! ! 1 3.5 () () (dynp)
+wn-206-01-01-02-b ! ! 1 3.5 () () (dynp)
+
+End     Host
+
+################
+
+Define the dynp External Load Index In the Resource Section of lsf.shared:
+
+Begin Resource
+RESOURCENAME  TYPE    INTERVAL INCREASING  DESCRIPTION        # Keywords
+
+   dynp    Numeric 60      Y        (dynpart: 1 batch, 2 cloud)
+
+[....]
+End Resource
+
+################
+
+Declare use of the custom ESUB method. Add the following in lsf.conf:
+
+LSB_ESUB_METHOD="dynp"
+
+Note: The provided esub.dynp assumes that no other esub method is in place. If so, you must adapt it to your specific case.
+
+###############
+
+Verify LSF configuration is ok:
+
+lsadmin ckconfig
+
+If everything is ok, <to be continued>
