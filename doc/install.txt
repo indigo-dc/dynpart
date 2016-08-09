@@ -52,7 +52,9 @@ This guide assumes that:
 
 from the LSF master:
 
-create directories and deploy files:
+Ensure that needed path exist or create them:
+
+
 
 - mkdir -p $LSF_TOP/var/tmp/cloudside/
 - mkdir -p $LSF_TOP/var/tmp/batchside/
@@ -75,6 +77,9 @@ your specific setup.
 cd $LSF_TOP/conf/scripts/dynpart/
 gcc mcjobs_r.c -I/usr/share/lsf/9.1/include/ /usr/share/lsf/9.1/linux2.6-glibc2.3-x86_64/lib/libbat.a /usr/share/lsf/9.1/linux2.6-glibc2.3-x86_64/lib/liblsf.a -lm -lnsl -ldl -o mcjobs_r
 
+
+Edit dynpart.conf
+Refer to doc/howto_configure_dynpart.conf
 
 Edit LSF configuration files
 
@@ -123,4 +128,24 @@ Verify LSF configuration is ok:
 
 lsadmin ckconfig
 
-If everything is ok, <to be continued>
+If everything is ok (no errors found) reconfigure and restart lim on
+all nodes in the cluster:
+
+[root@lsf9test ~]# lsadmin reconfig
+
+Checking configuration files ...
+No errors found.
+
+Restart only the master candidate hosts? [y/n] n
+Do you really want to restart LIMs on all hosts? [y/n] y
+Restart LIM on <lsf9test> ...... done
+Restart LIM on <t1-cloudcc-02> ...... done
+Restart LIM on <wn-206-01-01-01-b> ...... done
+Restart LIM on <wn-206-01-01-02-b> ...... done
+
+Note: you can only manually restart lim on a subset of nodes, if
+needed. For example, if you configure dynp for more nodes in
+lsf.cluster.<clustername> cluster and want to make them partition
+aware you can restrict limrestart to those nodes only.
+
+<to be continued>
