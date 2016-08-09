@@ -119,9 +119,9 @@ def check_b2c(batch_cloud_dict):
     """check_b2c(<dict>) ->
     Checks each host in B2C if it is ready for switch and makes the switch when
     host has #Running_jobs = 0, Returns the updated <dict>"""
-    mcjobs_r = jc['switch']["mcjobs_r"]
+    mcjobs_r = jc['switch']['mcjobs_r']
     rj_file = jc['switch']['rj_file']
-    cmd = """%s x >> %s""" % (mcjobs_r, rj_file)
+    cmd = """%s x > %s""" % (mcjobs_r, rj_file)
     e, o = commands.getstatusoutput(cmd)
     if e or o.endswith('No matching job found'):
         mlog(logf, "./mcjobs_r Failed!")
