@@ -85,7 +85,9 @@ Edit LSF configuration files
 
 /usr/share/lsf/conf/lsf.cluster.<clustername>
 
-In the Host section specify usage of the dynp elim on each WN participating in the dynamic partitioning
+In the Host section specify usage of the dynp elim on each WN
+participating in the dynamic partitioning
+
 Following is an example Host section:
 
 Begin   Host
@@ -97,6 +99,7 @@ lsf9test   !   !   1   3.5   ()   ()   (mg)
 #Cloud Controller for Dynamic Partitioning
 t1-cloudcc-02   ! ! 1 3.5 () () (mg)
 
+#Worker nodes
 wn-206-01-01-01-b ! ! 1 3.5 () () (dynp)
 wn-206-01-01-02-b ! ! 1 3.5 () () (dynp)
 
@@ -148,4 +151,24 @@ needed. For example, if you configure dynp for more nodes in
 lsf.cluster.<clustername> cluster and want to make them partition
 aware you can restrict limrestart to those nodes only.
 
-<to be continued>
+Next, restart the Master Batch Daemon
+
+[root@lsf9test ~]# badmin mbdrestart
+
+Little after the header output line of the lsload -l command
+will display the new External Load Information value dynp.
+
+Time after (limrestart takes several minutes to take effect, even on a
+small cluster) the value 1 should be reported by each node configured
+to play dynp. other cluster members would display a dash.
+
+At Cloud side
+<to be written>
+
+##########
+
+Now everything should be ready. You can chek your setup following
+instructions on dynpart_test.txt
+
+
+
