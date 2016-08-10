@@ -8,6 +8,19 @@ import commands
 from novaclient.v2 import client
 from neutronclient.v2_0 import client as neutronClient
 
+"""Copyright (c) 2015 INFN - INDIGO-DataCloud
+All Rights Reserved
+Licensed under the Apache License, Version 2.0;
+you may not use this file except in compliance with the
+License. You may obtain a copy of the License at:
+   http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied.
+See the License for the specific language governing
+permissions and limitations under the License."""
+
 """
 Partition director : Manages the switching of role and
 status of nodes from/to Batch/Cloud
@@ -119,9 +132,9 @@ def check_b2c(batch_cloud_dict):
     """check_b2c(<dict>) ->
     Checks each host in B2C if it is ready for switch and makes the switch when
     host has #Running_jobs = 0, Returns the updated <dict>"""
-    mcjobs_r = jc['switch']["mcjobs_r"]
+    mcjobs_r = jc['switch']['mcjobs_r']
     rj_file = jc['switch']['rj_file']
-    cmd = """%s x >> %s""" % (mcjobs_r, rj_file)
+    cmd = """%s x > %s""" % (mcjobs_r, rj_file)
     e, o = commands.getstatusoutput(cmd)
     if e or o.endswith('No matching job found'):
         mlog(logf, "./mcjobs_r Failed!")
