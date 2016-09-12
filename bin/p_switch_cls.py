@@ -88,6 +88,9 @@ class Switch(object):
             self.host_list = []
 
         self.valid_host_list = []
+        self.cn_list = []
+        for x in self.nova.hypervisors.list():
+            self.cn_list.append(x.hypervisor_hostname)
 
     def check_valid_b_host(self, hostN):
         cmd = """bhosts %s """ % hostN
@@ -107,17 +110,15 @@ class Switch(object):
         return self.valid_b_list
 
     def get_valid_cn_list(self):
-        self.cn_list = []
         self.valid_cn_list = []
-        for x in self.nova.hypervisors.list():
-            self.cn_list.append(x.hypervisor_hostname)
         for hostN in self.host_list:
             if hostN in self.cn_list:
                 self.valid_cn_list.append(hostN)
         return self.valid_cn_list
 
-    def pre_switch_action(self, X, Y):
+    def pre_switch_action(self, X, Y, valid_host_list):
         """Creats the set Z from the valid nodes in the listfile"""
+        self.valid_host_list = valid_host_list
         Z = set(self.valid_host_list)
         """Firstly X should not include the nodes which are already in
         list Y and Secondly it should contain unique elements from
@@ -164,11 +165,11 @@ def main():
     sw = Switch(conf_file, opt, listfile)
 
     if sw.opt == 'to_cloud':
-        sw.valid_host_list = sw.get_valid_cn_list()
-        sw.farm_json_dict = sw.pre_switch_action('B2CR', 'C')
+        valid_host_list = sw.get_valid_cn_list()
+        sw.farm_json_dict = sw.pre_switch_action('B2CR', 'C', valid_host_list)
     elif sw.opt == 'to_batch':
-        sw.valid_host_list = sw.get_valid_b_list()
-        sw.farm_json_dict = sw.pre_switch_action('C2BR', 'B')
+        valid_host_list = sw.get_valid_b_list()
+        sw.farm_json_dict = sw.pre_switch_action('C2BR', 'B', valid_host_list)
 
     put_jsondict(sw.farm_json_file, sw.farm_json_dict)
 

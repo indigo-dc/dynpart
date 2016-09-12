@@ -27,7 +27,6 @@ class BatchJobSubmitter(object):
         self.conf_file = conf_file
         self.jc = get_jsondict(self.conf_file)
         self.batch_submitter_dict = get_value(self.jc, 'batch_submitter')
-        self.cmd_sleep = get_value(self.batch_submitter_dict, 'cmd_sleep')
         self.queue = get_value(self.batch_submitter_dict, 'queue')
         self.max_pend = get_value(self.batch_submitter_dict, 'max_pend')
         self.avg_sleep = get_value(self.batch_submitter_dict, 'avg_sleep')
