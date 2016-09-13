@@ -22,7 +22,6 @@ class TestSwitch(unittest.TestCase):
         self.assertFalse(
             "wn-206-01-01-02-b.cr.cnaf.infn.it" in self.d.farm_json_dict['C'])
         self.d.make_switch("wn-206-01-01-02-b.cr.cnaf.infn.it", 'C', 'B2C')
-        print self.d.farm_json_dict
         self.assertTrue(
             "wn-206-01-01-02-b.cr.cnaf.infn.it" in self.d.farm_json_dict['C'])
         self.assertTrue(
@@ -34,7 +33,6 @@ class TestSwitch(unittest.TestCase):
         self.assertFalse(
             "wn-206-01-01-02-b.cr.cnaf.infn.it" in self.d.farm_json_dict['B'])
         self.d.make_switch("wn-206-01-01-02-b.cr.cnaf.infn.it", 'B', 'C2B')
-        print self.d.farm_json_dict
         self.assertTrue(
             "wn-206-01-01-02-b.cr.cnaf.infn.it" in self.d.farm_json_dict['B'])
         self.assertTrue(
@@ -69,11 +67,11 @@ class TestSwitch(unittest.TestCase):
         ) if x.hypervisor_hostname == hostN][0]
         self.assertEqual(expected_count, self.d.count_N_vm(hostN))
 
-    def test_stop_running_vm(self):
-        hostN = "wn-206-01-01-01-b.cr.cnaf.infn.it"
-        self.d.stop_running_vm(hostN)
-        time.sleep(10)
-        self.assertEqual(0, self.d.count_N_vm(hostN))
+    # def test_stop_running_vm(self):
+    #     hostN = "wn-206-01-01-01-b.cr.cnaf.infn.it"
+    #     self.d.stop_running_vm(hostN)
+    #     time.sleep(10)
+    #     self.assertEqual(0, self.d.count_N_vm(hostN))
 
 if __name__ == '__main__':
     unittest.main()
