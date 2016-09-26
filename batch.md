@@ -24,7 +24,7 @@ Finally install the dynpart package.
 $ yum install python-lsf-dynpart-partition-director
 ```
 
-  On the LSF master, installing this package basically create directories and deploy following files:
+  On the LSF master, installing this package basically create and deploy following directories and files:
 
 ```
 mkdir -p $LSF_TOP/var/tmp/cloudside/
