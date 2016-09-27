@@ -2,10 +2,8 @@ name=python-dynpart-partition-director
 version=0.08
 tag=master
 git=https://github.com/indigo-dc/dynpart.git
-
 source_dir=sources
 rpmbuild_dir=$(shell pwd)/rpmbuild
-
 spec=dynpart-pd.spec
 dist=$(shell rpm --eval '%dist' | sed 's/%dist/.el5/')
 
