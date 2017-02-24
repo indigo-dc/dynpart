@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-
 import os
 import sys
 from novaclient.v2 import client
 from neutronclient.v2_0 import client as neutronClient
-from dynp_common import mlog, get_jsondict, get_value
+from dynp_common import get_jsondict, get_value
 
 """Copyright (c) 2015 INFN - INDIGO-DataCloud
 All Rights Reserved
@@ -19,30 +18,8 @@ either express or implied.
 See the License for the specific language governing
 permissions and limitations under the License."""
 
-"""
-stop and delete an instance
-Usage: Usage: delete_instance.py <name-of-the-instance>
 
-"""
-
-
-"""
-Algorithm
-
-Take: The authentication parameters from the conf file
-and name of the instance from cmdline
-Does: Stops, deletes the instance and releases the IP
-
-"""
-
-
-def help():
-    print """"usage: delete_instance.py <name-of-the-instance> \n
-    Stops, deletes the instance and releases the IP
-"""
-
-
-class DeleteInstance(object):
+class Instance(object):
 
     def __init__(self, conf_file):
         self.conf_file = conf_file
@@ -55,6 +32,12 @@ class DeleteInstance(object):
         log_filename = get_value(lgdict, 'log_file')
         self.log_file = os.path.join(log_dir, log_filename)
         self.logf = open(self.log_file, 'a')
+        vm_conf_dict = get_value(self.jc, 'VM_conf')
+        self.image = get_value(vm_conf_dict, 'image')
+        self.flavor = get_value(vm_conf_dict, 'flavor')
+        self.keyname = get_value(vm_conf_dict, 'keyname')
+        self.max_retries = get_value(vm_conf_dict, 'max_retries')
+        self.sleeptime = get_value(vm_conf_dict, 'sleeptime')
 
         authdict = get_value(self.jc, 'auth')
         self.USERNAME = get_value(authdict, 'USERNAME_d')
@@ -69,39 +52,22 @@ class DeleteInstance(object):
                                             tenant_name=self.PROJECT_ID,
                                             auth_url=self.AUTH_URL)
 
+        self.image_id = self.nova.images.find(name=self.image).id
+        self.flavor_id = self.nova.flavors.find(name=self.flavor).id
+        self.network_pri_id = self.nova.networks.find(label='private').id
+        if not self.nova.keypairs.findall(name=self.keyname):
+            mlog(self.logf,  "Please associate your own keypair..Exiting ")
+            sys.exit(0)
 
-def main():
-    conf_file = '/etc/indigo/dynpart/dynp.conf'
-    if not os.path.isfile(conf_file):
-        print "%s file not found" % conf_file
-        sys.exit(1)
+# def main():
+#     conf_file = '/etc/indigo/dynpart/dynp.conf'
+#     if not os.path.isfile(conf_file):
+#         print "%s file not found" % conf_file
+#         sys.exit(1)
 
-    d = DeleteInstance(conf_file)
+#     n = Instance(conf_file)
+#     attrs = vars(n)
+#     print '\n '.join("%s: %s" % item for item in attrs.items())
 
-    try:
-        instance_name = sys.argv[1]
-    except IndexError:
-        help()
-        sys.exit(1)
-
-    """delete the instance"""
-    instance_id = [x.id for x in d.nova.servers.list() if x.name ==
-                   instance_name]
-    try:
-        d.nova.servers.delete(instance_id[0])
-        mlog(d.logf, "Deleting the instance: " + instance_name)
-    except Exception, e:
-        mlog(d.logf, "No server named %s found: %s" % (instance_name, str(e)))
-        sys.exit(0)
-
-    ip = instance_name.partition('-')[2].replace('-', '.')
-    try:
-        ip_obj = d.neutron.list_floatingips(floating_ip_address=ip)
-        ip_id = ip_obj['floatingips'][0]['id']
-        d.neutron.delete_floatingip(ip_id)
-        mlog(d.logf, "Releasing the IP %s" % ip)
-    except Exception, e:
-        mlog(d.logf, "No IP named %s found: %s" % (ip, str(e)))
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

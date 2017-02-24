@@ -2,8 +2,9 @@
 
 import os
 import sys
-import time
-import json
+import commands
+from novaclient.v2 import client
+from dynp_common import mlog, get_jsondict, put_jsondict, get_value
 
 """Copyright (c) 2015 INFN - INDIGO-DataCloud
 All Rights Reserved
@@ -39,35 +40,6 @@ Does: Makes the initial preperation of json dictionary and switch/moves
 the nodes to a particular set depending on the request i.e FROM/TO batch/cloud
 """
 
-conf_file = '/etc/indigo/dynpart/dynp.conf'
-
-
-def now():
-    """returns human readable date and time"""
-    return time.ctime(time.time())
-
-
-def mlog(f, m, dbg=True):
-    """mlog(<file>,log message[,dbg=True]) ->
-    append one log line to <file> if dbg == True"""
-    script_name = os.path.basename(sys.argv[0])
-    msg = "%s %s:" % (now(), script_name) + m
-    f.write(msg + '\n')
-    f.flush()
-    if dbg:
-        print msg
-
-
-def get_jsondict(json_file):
-    """get_jsondict(<json_file>) ->
-    Returns python dictionary object from JSON file"""
-    try:
-        batch_cloud_dict = json.load(open(json_file, 'r'))
-    except:
-        mlog(logf, "error parsing %s" % json_file)
-        sys.exit(0)
-    return batch_cloud_dict
-
 
 def help():
     print """"usage: p_switch.py to_batch|to_cloud filename\n
@@ -75,94 +47,131 @@ def help():
     to a particular set depending on the request i.e FROM/TO batch/cloud
 """
 
-if len(sys.argv) <= 2:
-    help()
-    sys.exit(0)
 
-if not os.path.isfile(conf_file):
-    print "%s file not found" % conf_file
-    sys.exit(1)
+class Switch(object):
+    """Switch class for switch / move of nodes to a particular set
+    depending on the request i.e FROM / TO batch / cloud for all modules"""
 
-try:
-    jc = json.load(open(conf_file, 'r'))
-except ValueError:
-    print "error while reading %s" % conf_file
-except AttributeError:
-    print "wrong json syntax : check your syntax in %s" % conf_file
-except Exception, e:
-    print str(e)
-    sys.exit(0)
+    def __init__(self, conf_file, opt, listfile):
+        self.conf_file = conf_file
+        self.opt = opt
+        self.listfile = listfile
+        self.jc = get_jsondict(self.conf_file)
 
-log_dir = jc['logging']['log_dir']
-log_file = os.path.join(log_dir, jc['logging']['log_file'])
-batch_cloud_json = jc['switch']['batch_cloud_json']
-batch_cloud_dict = get_jsondict(batch_cloud_json)
+        lgdict = get_value(self.jc, 'logging')
+        log_dir = get_value(lgdict, 'log_dir')
+        if not os.path.isdir(log_dir):
+            print "Please check the %s directory" % log_dir
+            sys.exit(1)
+        log_filename = get_value(lgdict, 'log_file')
+        self.log_file = os.path.join(log_dir, log_filename)
+        self.logf = open(self.log_file, 'a')
 
-if not os.path.isdir(log_dir):
-    print "%s file not found" % log_dir
-    sys.exit(1)
+        switch_dict = get_value(self.jc, 'switch')
+        self.farm_json_file = get_value(switch_dict, 'batch_cloud_json')
+        self.farm_json_dict = get_jsondict(self.farm_json_file)
 
-logf = open(log_file, 'a')
-have_args = len(sys.argv) > 1
-if have_args:
+        authdict = get_value(self.jc, 'auth')
+        self.USERNAME = get_value(authdict, 'USERNAME')
+        self.PASSWORD = get_value(authdict, 'PASSWORD')
+        self.PROJECT_ID = get_value(authdict, 'PROJECT_ID')
+        self.AUTH_URL = get_value(authdict, 'AUTH_URL')
+
+        self.nova = client.Client(
+            self.USERNAME, self.PASSWORD, self.PROJECT_ID, self.AUTH_URL)
+
+        try:
+            self.host_list = [x for x in open(
+                self.listfile, 'r').read().split() if x]
+        except:
+            mlog(self.logf, "Error while parsing %s" % self.listfile)
+            self.host_list = []
+
+        self.valid_host_list = []
+        self.cn_list = []
+        for x in self.nova.hypervisors.list():
+            self.cn_list.append(x.hypervisor_hostname)
+
+    def check_valid_b_host(self, hostN):
+        cmd = """bhosts %s """ % hostN
+        e, o = commands.getstatusoutput(cmd)
+        if e:
+            mlog(self.logf, "Failed with %s" % o)
+            return False
+        return True
+
+    def get_valid_b_list(self):
+        self.valid_b_list = []
+        for hostN in self.host_list:
+            if self.check_valid_b_host(hostN):
+                self.valid_b_list.append(hostN)
+            else:
+                pass
+        return self.valid_b_list
+
+    def get_valid_cn_list(self):
+        self.valid_cn_list = []
+        for hostN in self.host_list:
+            if hostN in self.cn_list:
+                self.valid_cn_list.append(hostN)
+        return self.valid_cn_list
+
+    def pre_switch_action(self, X, Y, valid_host_list):
+        """Creats the set Z from the valid nodes in the listfile"""
+        self.valid_host_list = valid_host_list
+        Z = set(self.valid_host_list)
+        """Firstly X should not include the nodes which are already in
+        list Y and Secondly it should contain unique elements from
+        present and past requests"""
+        already_in_Y = Z & set(self.farm_json_dict[Y])
+        already_in_X = Z & set(self.farm_json_dict[X])
+        for node in already_in_Y:
+            mlog(self.logf, "Node %s is already in %s - Doing Nothing"
+                 % (node, Y))
+        for node in already_in_X:
+            mlog(self.logf, "Node %s is already in %s - Doing Nothing"
+                 % (node, X))
+        Z = Z - set(self.farm_json_dict[Y])
+        add_to_X = Z - set(self.farm_json_dict[X])
+        for host in add_to_X:
+            mlog(self.logf, "Moving node %s to %s" % (host, X))
+        self.farm_json_dict[X] = list(set(self.farm_json_dict[X]) | Z)
+        for hostname in self.farm_json_dict[X]:
+            mlog(self.logf, "Node %s will be moved to %s" % (hostname, Y))
+        return self.farm_json_dict
+
+
+def main():
+    if len(sys.argv) <= 2:
+        help()
+        sys.exit(0)
+
+    conf_file = '/etc/indigo/dynpart/dynp.conf'
+    if not os.path.isfile(conf_file):
+        print "%s file not found" % conf_file
+        sys.exit(1)
+
     opt = sys.argv[1]
     match = (opt in ['to_cloud', 'to_batch'])
     if not match:
-        mlog(logf, "Option doesn't match, options are : to_cloud or to_batch")
+        print "Option doesn't match, options are : to_cloud or to_batch"
         sys.exit(0)
-    if opt == 'to_cloud':
-        to_cloud_file = sys.argv[2]
-        to_batch_file = ''
-        if not os.path.isfile(to_cloud_file):
-            mlog(logf, "Please check the path of the file")
-            sys.exit(1)
 
-        try:
-            """Creats the set B2CR from the nodes in the file"""
-            B2CR = set(
-                [x for x in open(to_cloud_file, 'r').read().split() if x])
-        except:
-            mlog(logf, "Error while parsing %s" % to_cloud_file)
-            B2CR = set()
-        """Firstly B2CR should not include the nodes which are already in list C and
-Secondly it should contain unique elements from present and past requests"""
-        if not B2CR.isdisjoint(set(batch_cloud_dict['C'])):  # intersection
-            already_in_C = B2CR.intersection(set(batch_cloud_dict['C']))
-            for node in already_in_C:
-                mlog(logf, "Node: %s is already in C set-Doing Nothing" % node)
-        B2CR = B2CR - set(batch_cloud_dict['C'])
-        batch_cloud_dict['B2CR'] = list(set(batch_cloud_dict['B2CR']) | B2CR)
-        for hostname in batch_cloud_dict['B2CR']:
-            mlog(logf, "Moving node %s to B2CR" % hostname)
-        """Write back the updated dict to json file"""
-        with open(batch_cloud_json, 'w') as f:
-            json.dump(batch_cloud_dict, f)
-        # os.remove(to_cloud_file)#commented until testing
+    listfile = sys.argv[2]
+    if not os.path.isfile(listfile):
+        print "Please check the path of the listfile"
+        sys.exit(1)
 
-    elif opt == 'to_batch':
-        to_batch_file = sys.argv[2]
-        to_cloud_file = ''
-        if not os.path.isfile(to_batch_file):
-            mlog(logf, "Please check the path of the file")
-            sys.exit(1)
-        try:
-            """Creats the set C2BR from the nodes in the file"""
-            C2BR = set(
-                [x for x in open(to_batch_file, 'r').read().split() if x])
-        except:
-            mlog(logf, "Error while parsing %s" % to_batch_file)
-            C2BR = set()
-        """Firstly C2BR should not include the nodes which are already in list B and
-Secondly it should contain unique elements from present and past requests"""
-        if not C2BR.isdisjoint(set(batch_cloud_dict['B'])):  # intersection
-            already_in_B = C2BR.intersection(set(batch_cloud_dict['B']))
-            for node in already_in_B:
-                mlog(logf, "Node: %s is already in B set-Doing Nothing" % node)
-        C2BR = C2BR - set(batch_cloud_dict['B'])
-        batch_cloud_dict['C2BR'] = list(set(batch_cloud_dict['C2BR']) | C2BR)
-        for hostname in batch_cloud_dict['C2BR']:
-            mlog(logf, "Moving node %s to C2BR" % hostname)
-        """Write back the updated dict to json file"""
-        with open(batch_cloud_json, 'w') as f:
-            json.dump(batch_cloud_dict, f)
-        # os.remove(to_batch_file)#commented until testing
+    sw = Switch(conf_file, opt, listfile)
+
+    if sw.opt == 'to_cloud':
+        valid_host_list = sw.get_valid_cn_list()
+        sw.farm_json_dict = sw.pre_switch_action('B2CR', 'C', valid_host_list)
+    elif sw.opt == 'to_batch':
+        valid_host_list = sw.get_valid_b_list()
+        sw.farm_json_dict = sw.pre_switch_action('C2BR', 'B', valid_host_list)
+
+    put_jsondict(sw.farm_json_file, sw.farm_json_dict)
+
+if __name__ == "__main__":
+    main()
