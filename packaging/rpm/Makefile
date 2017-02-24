@@ -2,12 +2,8 @@ name=python-dynpart-partition-director
 version=0.08
 tag=master
 git=https://github.com/indigo-dc/dynpart.git
-
-# needed dirs
 source_dir=sources
 rpmbuild_dir=$(shell pwd)/rpmbuild
-
-# spec file
 spec=dynpart-pd.spec
 dist=$(shell rpm --eval '%dist' | sed 's/%dist/.el5/')
 
@@ -22,16 +18,11 @@ print-info:
 	@echo
 
 prepare-sources: sanity-checks clean
-		 mkdir -p $(source_dir)/$(name)
-		 git clone $(git) $(source_dir)/$(name)
-		 cd $(source_dir)/$(name) && git checkout $(tag) && git archive --format=tar --prefix=$(name)-$(version)/ $(tag) > $(name)-$(version).tar
-		 cd $(source_dir) && gzip $(name)/$(name)-$(version).tar
-		 cp $(source_dir)/$(name)/$(name)-$(version).tar.gz $(source_dir)/$(name)-$(version).tar.gz
-
-
-#prepare-spec: prepare-sources
-#	       sed -e 's#@@PACKAGE_VERSION@@#$(package_version)#g' \
-#	       $(spec_src) > $(spec)
+	mkdir -p $(source_dir)/$(name)
+	git clone $(git) $(source_dir)/$(name)
+	cd $(source_dir)/$(name) && git checkout $(tag) && git archive --format=tar --prefix=$(name)-$(version)/ $(tag) > $(name)-$(version).tar
+	cd $(source_dir) && gzip $(name)/$(name)-$(version).tar
+	cp $(source_dir)/$(name)/$(name)-$(version).tar.gz $(source_dir)/$(name)-$(version).tar.gz
 
 rpm: prepare-sources
 	mkdir -p $(rpmbuild_dir)/BUILD \
@@ -47,5 +38,5 @@ clean:
 
 sanity-checks:
 ifndef version
-        $(error version is undefined)
+	$(error version is undefined)
 endif
