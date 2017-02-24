@@ -1,4 +1,4 @@
-from dynp_common import *
+from dynpart.bin.dynp_common import *
 import time
 import os
 import sys
@@ -8,7 +8,7 @@ import shutil
 import tempfile
 
 
-class TestNow(unittest.TestCase):
+class TestDynpCommon(unittest.TestCase):
 
     def setUp(self):
         self.t = time.time()
@@ -39,11 +39,6 @@ class TestNow(unittest.TestCase):
         expected_dict = get_jsondict(json_file)
         self.assertDictEqual(resulting_dict, expected_dict)
 
-    def test_get_value(self):
-        mydict = {"Alpha": "Z", "Numbers": 42}
-        self.assertEqual(mydict["Numbers"], get_value(mydict, 'Numbers'))
-        self.assertTrue(get_value(mydict, 'Numbers'))
-
     def test_put_jsondict(self):
         json_file = os.path.join(self.test_dir, 'test.txt')
         mydict = {"Alpha": ["A", "B"], "Numbers": [1, 2]}
@@ -54,8 +49,13 @@ class TestNow(unittest.TestCase):
         self.assertIn('Numbers', mydict_2)
         self.assertNotIn('Romans', mydict_2)
         self.assertEqual(len(mydict_2), 2)
-        self.assertTrue('Alpha' in mydict_2)
-        self.assertFalse('blah' in mydict_2)
+        self.assertTrue("Alpha" in mydict_2)
+        self.assertFalse("blah" in mydict_2)
+
+    def test_get_value(self):
+        mydict = {"Alpha": "Z", "Numbers": 42}
+        self.assertEqual(mydict["Numbers"], get_value(mydict, 'Numbers'))
+        self.assertTrue(get_value(mydict, 'Numbers'))
 
 if __name__ == '__main__':
     unittest.main()

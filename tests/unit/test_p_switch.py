@@ -1,4 +1,4 @@
-from p_switch_cls import Switch
+from dynpart.bin.p_switch import Switch
 import os
 import sys
 import unittest
@@ -60,6 +60,11 @@ class TestSwitch(unittest.TestCase):
         self.assertNotIn('blahblah', list_returned)
 
     def test_switch_to_cloud(self):
+        json_dict = {"C": ["wn-206-01-01-01-b.cr.cnaf.infn.it"],
+                     "B": ["wn-206-01-01-02-b.cr.cnaf.infn.it"],
+                     "B2CR": [], "C2BR": [], "C2B": [], "FB": [], "FC": [],
+                     "C2B_TTL": {}, "B2C": []}
+        self.sw.farm_json_dict = json_dict
         B_list = ["wn-206-01-01-02-b.cr.cnaf.infn.it"]
         C_list = ["wn-206-01-01-01-b.cr.cnaf.infn.it"]
         self.assertListEqual([], self.sw.pre_switch_action(
@@ -68,6 +73,11 @@ class TestSwitch(unittest.TestCase):
             'B2CR', 'C', B_list)['B2CR'])
 
     def test_switch_to_batch(self):
+        json_dict = {"C": ["wn-206-01-01-01-b.cr.cnaf.infn.it"],
+                     "B": ["wn-206-01-01-02-b.cr.cnaf.infn.it"],
+                     "B2CR": [], "C2BR": [], "C2B": [], "FB": [], "FC": [],
+                     "C2B_TTL": {}, "B2C": []}
+        self.sw.farm_json_dict = json_dict
         B_list = ["wn-206-01-01-02-b.cr.cnaf.infn.it"]
         C_list = ["wn-206-01-01-01-b.cr.cnaf.infn.it"]
         self.assertListEqual([], self.sw.pre_switch_action(
