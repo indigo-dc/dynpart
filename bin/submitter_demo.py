@@ -52,7 +52,7 @@ while True:
     print "pending jobs:", np
     if np < 5:
         for n in range(max_pend):
-            sub_cmd = cmd % sleeptime(avg_sleep)
+            sub_cmd = cmd % sleeptime(sub_cmd, avg_sleep)
             print "Executing: %s" % sub_cmd
             e, o = commands.getstatusoutput(sub_cmd)
             if e:

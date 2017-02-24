@@ -16,8 +16,16 @@ either express or implied.
 See the License for the specific language governing
 permissions and limitations under the License."""
 
-e,o = commands.getstatusoutput('bjobs -noheader -u all -w -r')
-if e or o.endswith('No running job found'):
+
+def have_jobs(s):
+    tok = s.split()[0]
+    return tok.isdigit()
+
+e, o = commands.getstatusoutput('bjobs -noheader -u all -w -r')
+if o.endswith('No running job found'):
+    sys.exit(0)
+elif e or not have_jobs(o):
+    print "Error running bjobs, exiting with %d " % e
     sys.exit(1)
 
 RJ = [[x[0], x[1], x[5]] for x in [l.split() for l in o.split('\n')]]

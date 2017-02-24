@@ -1,4 +1,4 @@
-#!/usr/bin/env python                                                                                                                                                              
+#!/usr/bin/env python
 import os
 import sys
 from novaclient.v2 import client
@@ -17,6 +17,7 @@ software distributed under the License is distributed on an
 either express or implied.
 See the License for the specific language governing
 permissions and limitations under the License."""
+
 
 class Instance(object):
 
@@ -65,9 +66,8 @@ class Instance(object):
 #         sys.exit(1)
 
 #     n = Instance(conf_file)
-#     attrs = vars(n)                                                                                                 
+#     attrs = vars(n)
 #     print '\n '.join("%s: %s" % item for item in attrs.items())
 
 # if __name__ == "__main__":
 #     main()
-

@@ -25,8 +25,11 @@ def now():
     """returns human readable date and time"""
     return time.ctime(time.time())
 
+# Added during unittest testing
+# def mlog(f, m, dbg=True):
 
-def mlog(f, m, dbg=True):
+
+def mlog(f, m, dbg=False):
     """mlog(<file>,log message[,dbg=True]) ->
     append one log line to <file> if dbg == True"""
     script_name = os.path.basename(sys.argv[0])
