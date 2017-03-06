@@ -1,4 +1,4 @@
-from dynpart.bin.p_switch import Switch
+from bin.p_switch import Switch
 import os
 import sys
 import unittest
@@ -12,8 +12,7 @@ class TestSwitch(unittest.TestCase):
 
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
-#        self.conf_file = '/etc/indigo/dynpart/dynp.conf'
-        self.conf_file = '/home/CMS/sonia.taneja/mygit/dynpart/dynpart/etc/dynp.conf'
+        self.conf_file = '/etc/indigo/dynpart/dynp.conf'
         self.opt = 'to_batch'
         self.listfile = os.path.join(self.test_dir, 'listfile')
 
@@ -47,7 +46,7 @@ class TestSwitch(unittest.TestCase):
 
         self.assertTrue(output, self.sw.check_valid_b_host(right_host))
 
-    @patch('dynpart.bin.p_switch.Switch.get_valid_b_list')
+    @patch('bin.p_switch.Switch.get_valid_b_list')
     def test_valid_b_list(self, b_list_mock):
         expected_list = ["wn-206-01-01-02-b.cr.cnaf.infn.it"]
         b_list_mock.return_value = ['wn-206-01-01-02-b.cr.cnaf.infn.it']
@@ -56,7 +55,7 @@ class TestSwitch(unittest.TestCase):
         self.assertIn('wn-206-01-01-02-b.cr.cnaf.infn.it', list_returned)
         self.assertNotIn('blahblah', list_returned)
 
-    @patch('dynpart.bin.p_switch.Switch.get_valid_cn_list')
+    @patch('bin.p_switch.Switch.get_valid_cn_list')
     def test_valid_cn_list(self, cn_list_mock):
         expected_list = ["wn-206-01-01-02-b.cr.cnaf.infn.it"]
         cn_list_mock.return_value = ['wn-206-01-01-02-b.cr.cnaf.infn.it']

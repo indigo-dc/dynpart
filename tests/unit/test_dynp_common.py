@@ -1,4 +1,4 @@
-from dynpart.bin.dynp_common import *
+from bin.dynp_common import *
 import time
 import os
 import sys
