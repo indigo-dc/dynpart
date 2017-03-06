@@ -156,6 +156,21 @@ See below an example configuration dynp.conf with inline description. Note that 
 "max_pend": 300,
 "avg_sleep": 280,
 "nap": 5
+},
+
+"fairshare": {
+#LSF partition name                                                                                                                                
+"partition_name":"SL6_GLOBAL",
+#Customized pattern to look for in the lsb_file                                                                                                    
+"pattern1":"HPART_NAME",
+#Customized pattern to look for in the lsb_file                                                                                                    
+"pattern2":"USER_SHARES",
+#Path of the lsb.hosts file                                                                                                                        
+"lsb_file":"/home/TIER1/sdalpra/demo/bin/lsb.hosts_shares.txt",
+#Temporary path to keep the updated lsb.hosts file                                                                                                 
+"temp_lsb_file":"/home/TIER1/sdalpra/demo/bin/temp_lsb.hosts_shares.txt",
+#u_groups which are of higher priority and should not be kept into mind while recalculating user share quota                                       
+"blacklist":["u_admin", "u_ops", "u_dteam", "u_test"]
 }
 
 }```
