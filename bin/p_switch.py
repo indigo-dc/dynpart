@@ -89,8 +89,11 @@ class Switch(object):
 
         self.valid_host_list = []
         self.cn_list = []
+
+    def get_cn_list(self):
         for x in self.nova.hypervisors.list():
             self.cn_list.append(x.hypervisor_hostname)
+        return self.cn_list
 
     def check_valid_b_host(self, hostN):
         cmd = """bhosts %s """ % hostN
@@ -163,6 +166,7 @@ def main():
         sys.exit(1)
 
     sw = Switch(conf_file, opt, listfile)
+    sw.get_cn_list()
 
     if sw.opt == 'to_cloud':
         valid_host_list = sw.get_valid_cn_list()
