@@ -5,7 +5,7 @@ import sys
 import time
 import getopt
 import commands
-from novaclient.v2 import client
+from novaclient import client
 from dynp_common import mlog, get_jsondict, get_value
 
 """
@@ -25,8 +25,7 @@ permissions and limitations under the License.
 """
 Manage nova compute service i.e enable/disable compute service on list of CN
 Usage:
-python cn-manage.py --mode=enable --file=listcn --reason="test" OR
-python cn-manage.py -mode enable -f listcn -r "test"'''
+python cn-manage.py -m enable -f listcn -r "test"
 
 """
 
@@ -41,8 +40,7 @@ CN's for a defined reason
 
 
 def help():
-    print """Usage: python cn-manage.py --mode=enable --file=listcn --reason="test" OR
-    python cn-manage.py -m enable -f listcn -r "test"
+    print """python cn-manage.py -m enable -f listcn -r "test"
     Enable|disable the nova compute service on list of
     CN's for a defined reason
 """
@@ -70,9 +68,13 @@ class CnManage(object):
         self.PASSWORD = get_value(authdict, 'PASSWORD')
         self.PROJECT_ID = get_value(authdict, 'PROJECT_ID')
         self.AUTH_URL = get_value(authdict, 'AUTH_URL')
+        self.VERSION = get_value(authdict, 'VERSION')
 
-        self.nova = client.Client(
-            self.USERNAME, self.PASSWORD, self.PROJECT_ID, self.AUTH_URL)
+        self.nova = client.Client(self.VERSION,
+                                  self.USERNAME,
+                                  self.PASSWORD,
+                                  self.PROJECT_ID,
+                                  self.AUTH_URL)
 
         try:
             self.host_list = [x for x in open(

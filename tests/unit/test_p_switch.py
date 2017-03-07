@@ -8,6 +8,7 @@ import shutil
 import mock
 from mock import patch
 
+
 class TestSwitch(unittest.TestCase):
 
     def setUp(self):

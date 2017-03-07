@@ -3,7 +3,7 @@
 import os
 import sys
 import commands
-from novaclient.v2 import client
+from novaclient import client
 from dynp_common import mlog, get_jsondict, put_jsondict, get_value
 
 """Copyright (c) 2015 INFN - INDIGO-DataCloud
@@ -76,9 +76,13 @@ class Switch(object):
         self.PASSWORD = get_value(authdict, 'PASSWORD')
         self.PROJECT_ID = get_value(authdict, 'PROJECT_ID')
         self.AUTH_URL = get_value(authdict, 'AUTH_URL')
+        self.VERSION = get_value(authdict, 'VERSION')
 
-        self.nova = client.Client(
-            self.USERNAME, self.PASSWORD, self.PROJECT_ID, self.AUTH_URL)
+        self.nova = client.Client(self.VERSION,
+                                  self.USERNAME,
+                                  self.PASSWORD,
+                                  self.PROJECT_ID,
+                                  self.AUTH_URL)
 
         try:
             self.host_list = [x for x in open(
