@@ -1,10 +1,12 @@
-from dynpart.bin.p_switch import Switch
+from bin.p_switch import Switch
 import os
 import sys
 import unittest
 import commands
 import tempfile
 import shutil
+import mock
+from mock import patch
 
 
 class TestSwitch(unittest.TestCase):
@@ -45,15 +47,19 @@ class TestSwitch(unittest.TestCase):
 
         self.assertTrue(output, self.sw.check_valid_b_host(right_host))
 
-    def test_valid_b_list(self):
+    @patch('bin.p_switch.Switch.get_valid_b_list')
+    def test_valid_b_list(self, b_list_mock):
         expected_list = ["wn-206-01-01-02-b.cr.cnaf.infn.it"]
+        b_list_mock.return_value = ['wn-206-01-01-02-b.cr.cnaf.infn.it']
         list_returned = self.sw.get_valid_b_list()
         self.assertListEqual(expected_list, self.sw.get_valid_b_list())
         self.assertIn('wn-206-01-01-02-b.cr.cnaf.infn.it', list_returned)
         self.assertNotIn('blahblah', list_returned)
 
-    def test_valid_cn_list(self):
+    @patch('bin.p_switch.Switch.get_valid_cn_list')
+    def test_valid_cn_list(self, cn_list_mock):
         expected_list = ["wn-206-01-01-02-b.cr.cnaf.infn.it"]
+        cn_list_mock.return_value = ['wn-206-01-01-02-b.cr.cnaf.infn.it']
         list_returned = self.sw.get_valid_cn_list()
         self.assertListEqual(expected_list, self.sw.get_valid_cn_list())
         self.assertIn('wn-206-01-01-02-b.cr.cnaf.infn.it', list_returned)

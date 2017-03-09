@@ -1,4 +1,4 @@
-from dynpart.bin.p_driver import Driver
+from bin.p_driver import Driver
 import os
 import sys
 import unittest
@@ -33,7 +33,7 @@ class TestDriver(unittest.TestCase):
         result = self.d.isError()
         self.assertFalse(result)
 
-    @patch('dynpart.bin.p_driver.Driver.count_N_jobs')
+    @patch('bin.p_driver.Driver.count_N_jobs')
     def test_count_N_jobs(self, count_jobs_mock):
         hostN = "wn-206-01-01-01-b.cr.cnaf.infn.it"
         count_jobs_mock.return_value = 10
@@ -68,28 +68,28 @@ class TestDriver(unittest.TestCase):
         self.assertTrue("wn-206-01-01-02-b.cr.cnaf.infn.it"
                         not in self.d.farm_json_dict['C2B'])
 
-    @patch('dynpart.bin.p_driver.Driver.enable_nova')
+    @patch('bin.p_driver.Driver.enable_nova')
     def test_enable_nova_compute(self, enable_nova_mock):
         hostN = "wn-206-01-01-01-b.cr.cnaf.infn.it"
         enable_nova_mock.return_value = True
         result = self.d.enable_nova(hostN)
         self.assertTrue(result)
 
-    @patch('dynpart.bin.p_driver.Driver.count_N_vm')
+    @patch('bin.p_driver.Driver.count_N_vm')
     def test_count_N_vm(self, count_vm_mock):
         hostN = "wn-206-01-01-01-b.cr.cnaf.infn.it"
         count_vm_mock.return_value = 10
         expected_count = 10
         self.assertEqual(expected_count, self.d.count_N_vm(hostN))
 
-    @patch('dynpart.bin.p_driver.Driver.stop_running_vm')
+    @patch('bin.p_driver.Driver.stop_running_vm')
     def test_stop_running_vm(self, stop_running_vm_mock):
         hostN = "wn-206-01-01-01-b.cr.cnaf.infn.it"
         stop_running_vm_mock.return_value = True
         result = self.d.stop_running_vm(hostN)
         self.assertTrue(result)
 
-    @patch('dynpart.bin.p_driver.Driver.stop_running_vm')
+    @patch('bin.p_driver.Driver.stop_running_vm')
     def test_check_c2b_ttl_expired(self, stop_running_vm_mock):
         json_dict = {"C": ["wn-206-01-01-01-b.cr.cnaf.infn.it"], "B": [],
                      "B2CR": [], "C2BR": [], "FB": [], "FC": [], "B2C": [],
@@ -109,7 +109,7 @@ class TestDriver(unittest.TestCase):
         result = self.d.check_c2b()
         self.assertEqual(expected_dict, result)
 
-    @patch('dynpart.bin.p_driver.Driver.count_N_vm')
+    @patch('bin.p_driver.Driver.count_N_vm')
     def test_check_c2b_ttl_not_expired_count_vm_not_zero(self, count_vm_mock):
         ttl = self.d.exe_time + 600
         json_dict = {"C": ["wn-206-01-01-01-b.cr.cnaf.infn.it"], "B": [],
@@ -121,7 +121,7 @@ class TestDriver(unittest.TestCase):
         result = self.d.check_c2b()
         self.assertEqual(json_dict, result)
 
-    @patch('dynpart.bin.p_driver.Driver.count_N_vm')
+    @patch('bin.p_driver.Driver.count_N_vm')
     def test_check_c2b_ttl_not_expired_count_vm_is_zero(self, count_vm_mock):
         ttl = self.d.exe_time + 600
         json_dict = {"C": ["wn-206-01-01-01-b.cr.cnaf.infn.it"], "B": [],
@@ -142,7 +142,7 @@ class TestDriver(unittest.TestCase):
         result = self.d.check_c2b()
         self.assertEqual(expected_dict, result)
 
-    @patch('dynpart.bin.p_driver.Driver.count_N_jobs')
+    @patch('bin.p_driver.Driver.count_N_jobs')
     def test_check_b2c_count_jobs_not_zero(self, count_jobs_mock):
         json_dict = {"C": ["wn-206-01-01-01-b.cr.cnaf.infn.it"], "B": [],
                      "B2CR": [], "C2BR": [], "C2B": [], "FB": [], "FC": [],
@@ -153,8 +153,8 @@ class TestDriver(unittest.TestCase):
         result = self.d.check_b2c()
         self.assertEqual(json_dict, result)
 
-    @patch('dynpart.bin.p_driver.Driver.enable_nova')
-    @patch('dynpart.bin.p_driver.Driver.count_N_jobs')
+    @patch('bin.p_driver.Driver.enable_nova')
+    @patch('bin.p_driver.Driver.count_N_jobs')
     def test_check_b2c_count_jobs_is_zero(self,
                                           count_jobs_mock, enable_nova_mock):
         json_dict = {"C": ["wn-206-01-01-01-b.cr.cnaf.infn.it"], "B": [],
@@ -172,7 +172,7 @@ class TestDriver(unittest.TestCase):
                          "B2C": []}
         self.assertEqual(expected_dict, result)
 
-    @patch('dynpart.bin.p_driver.Driver.disable_nova')
+    @patch('bin.p_driver.Driver.disable_nova')
     def test_disable_nova_compute(self, disable_nova_mock):
         hostN = "wn-206-01-01-01-b.cr.cnaf.infn.it"
         disable_nova_mock.return_value = True
