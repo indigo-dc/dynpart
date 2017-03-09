@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
-from novaclient.v2 import client
+from novaclient import client
 from neutronclient.v2_0 import client as neutronClient
 from dynp_common import get_jsondict, get_value
 
@@ -44,9 +44,13 @@ class Instance(object):
         self.PASSWORD = get_value(authdict, 'PASSWORD_d')
         self.PROJECT_ID = get_value(authdict, 'PROJECT_ID_d')
         self.AUTH_URL = get_value(authdict, 'AUTH_URL')
+        self.VERSION = get_value(authdict, 'VERSION')
 
-        self.nova = client.Client(
-            self.USERNAME, self.PASSWORD, self.PROJECT_ID, self.AUTH_URL)
+        self.nova = client.Client(self.VERSION,
+                                  self.USERNAME,
+                                  self.PASSWORD,
+                                  self.PROJECT_ID,
+                                  self.AUTH_URL)
         self.neutron = neutronClient.Client(username=self.USERNAME,
                                             password=self.PASSWORD,
                                             tenant_name=self.PROJECT_ID,
@@ -58,16 +62,3 @@ class Instance(object):
         if not self.nova.keypairs.findall(name=self.keyname):
             mlog(self.logf,  "Please associate your own keypair..Exiting ")
             sys.exit(0)
-
-# def main():
-#     conf_file = '/etc/indigo/dynpart/dynp.conf'
-#     if not os.path.isfile(conf_file):
-#         print "%s file not found" % conf_file
-#         sys.exit(1)
-
-#     n = Instance(conf_file)
-#     attrs = vars(n)
-#     print '\n '.join("%s: %s" % item for item in attrs.items())
-
-# if __name__ == "__main__":
-#     main()

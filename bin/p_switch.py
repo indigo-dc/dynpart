@@ -3,7 +3,7 @@
 import os
 import sys
 import commands
-from novaclient.v2 import client
+from novaclient import client
 from dynp_common import mlog, get_jsondict, put_jsondict, get_value
 
 """Copyright (c) 2015 INFN - INDIGO-DataCloud
@@ -76,9 +76,13 @@ class Switch(object):
         self.PASSWORD = get_value(authdict, 'PASSWORD')
         self.PROJECT_ID = get_value(authdict, 'PROJECT_ID')
         self.AUTH_URL = get_value(authdict, 'AUTH_URL')
+        self.VERSION = get_value(authdict, 'VERSION')
 
-        self.nova = client.Client(
-            self.USERNAME, self.PASSWORD, self.PROJECT_ID, self.AUTH_URL)
+        self.nova = client.Client(self.VERSION,
+                                  self.USERNAME,
+                                  self.PASSWORD,
+                                  self.PROJECT_ID,
+                                  self.AUTH_URL)
 
         try:
             self.host_list = [x for x in open(
@@ -89,8 +93,11 @@ class Switch(object):
 
         self.valid_host_list = []
         self.cn_list = []
+
+    def get_cn_list(self):
         for x in self.nova.hypervisors.list():
             self.cn_list.append(x.hypervisor_hostname)
+        return self.cn_list
 
     def check_valid_b_host(self, hostN):
         cmd = """bhosts %s """ % hostN
@@ -163,6 +170,7 @@ def main():
         sys.exit(1)
 
     sw = Switch(conf_file, opt, listfile)
+    sw.get_cn_list()
 
     if sw.opt == 'to_cloud':
         valid_host_list = sw.get_valid_cn_list()
