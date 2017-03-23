@@ -46,6 +46,8 @@ mkdir -p $LSF_TOP/var/tmp/batchside/
 mkdir -p $LSF_TOP/conf/scripts/dynpart/
 cp dynp.conf dynp.conf.template elim.dynp esub.dynp bjobs_r.py LSF_TOP/conf/scripts/dynpart/
 cp farm.json $LSF_TOP/var/tmp/cloudside/
+/usr/bin/adjust_lsf_shares.py
+/usr/bin/submitter_demo.py
 ```
 **IMPORTANT NOTE :**
 
