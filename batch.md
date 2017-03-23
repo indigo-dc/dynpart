@@ -40,7 +40,6 @@ $ sudo yum update python-lsf-dynpart-partition-director
 ```
 
 On the LSF master, installing this package basically create and deploy following directories and files:
-
 ```
 mkdir -p $LSF_TOP/var/tmp/cloudside/
 mkdir -p $LSF_TOP/var/tmp/batchside/
@@ -52,12 +51,10 @@ cp farm.json $LSF_TOP/var/tmp/cloudside/
 
 Please create this link according to the variable ``$LSF_SERVERDIR`` which depends on LSF installation. 
 
-
 ```
 ln -s $LSF_TOP/conf/scripts/dynpart/elim.dynp $LSF_SERVERDIR/elim.dynp
 ln -s $LSF_TOP/conf/scripts/dynpart/esub.dynp $LSF_SERVERDIR/esub.dynp
 ```
-
 and check if this link exists if not then create the one:
 
 
