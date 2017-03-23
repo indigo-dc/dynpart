@@ -1,4 +1,5 @@
 %define _lsfenvdir /usr/share/lsf/conf
+%define _bindir /bin
 
 Name:          python-dynpart-partition-director
 Version:       0.9
@@ -80,6 +81,9 @@ install -D -m0755 bin/adjust_lsf_shares.py  %{buildroot}%{_bindir}/adjust_lsf_sh
 %{_usr}/share/lsf/var/tmp/cloudside/farm.json
 %{_bindir}/submitter_demo.py
 %{_bindir}/adjust_lsf_shares.py
+
+%post lsf
+ln -s   %{_lsfenvdir}/scripts/dynpart/dynp.conf %{_sysconfdir}/indigo/dynpart/dynp.conf
 
 %changelog cc
 
