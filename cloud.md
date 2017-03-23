@@ -25,6 +25,20 @@ Finally install the dynpart package.
 $ yum install python-dynpart-partition-director
 ```
 
+## Updating Dynpart
+
+#### From RPM
+
+For updating from the INDIGO-1 release
+
+Make sure you have added the INDIGO package repository to you package sources. The package repository can be found at the [http://repo.indigo-datacloud.eu/repos/2/indigo2.repo](http://repo.indigo-datacloud.eu/repos/2/indigo2.repo) 
+
+##### Update the Dynpart package
+
+```
+$ sudo yum update python-lsf-dynpart-partition-director
+```
+
 On the cloud controller, installing this package basically deploy following files:
 
 ```
@@ -40,13 +54,13 @@ On the cloud controller, installing this package basically deploy following file
 ### The dynp configuration file
 
 The main configuration file for the Dynamic Partitioning is the  
-dynp.conf json file. BASEDIR for dynp in our case is _/usr/share/lsf/conf/scripts/dynpart _ which is based on local LSF environment.   
+dynp.conf json file. BASEDIR for dynp in our case is _/usr/share/lsf/conf/scripts/dynpart _ which is based on local LSF environment.  
 For instance the ’LSF\_ENVDIR' for LSF@CNAF is _/usr/share/lsf/conf_.
 
-Dynamic partitioning must be configured properly via filling the _/etc/indigo/dynpart/dynp.conf_ which is eventually a link to   
+Dynamic partitioning must be configured properly via filling the _/etc/indigo/dynpart/dynp.conf_ which is eventually a link to  
 _/usr/share/lsf/conf/scripts/dynpart/dynp.conf_
 
-`$. ls -l /etc/indigo/dynpart/dynp.conf  
+`$. ls -l /etc/indigo/dynpart/dynp.conf          
 lrwxrwxrwx 1 root root 45 Jul  7 12:28 /etc/indigo/dynpart/dynp.conf -> /usr/share/lsf/conf/scripts/dynpart/dynp.conf`
 
 json format does not allow comments in it. This document describes the configuration entries.

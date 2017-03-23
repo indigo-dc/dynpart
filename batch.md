@@ -26,7 +26,7 @@ $ yum install python-lsf-dynpart-partition-director
 ```
 
 ## Updating Dynpart
-For a cleaner new installation, Install the LSF side package:
+Install the LSF side package:
 
 ###FROM RPM
 
