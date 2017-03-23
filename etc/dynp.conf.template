@@ -1,0 +1,119 @@
+#auth section for Openstack user/project
+
+"auth": {
+#Name of the user with admin role
+"USERNAME":"admin",
+#Password of the user with admin role
+"PASSWORD":"PASSWORD",
+#Project id of the admin user
+"PROJECT_ID":"admin",
+#The keystone url
+"AUTH_URL":"http://xxx.xxx.xxx.xxx:xxxx/v2.0",
+#Name of the test user
+"USERNAME_d":"demo",
+#Password of the test user
+"PASSWORD_d":"PASSWORD",
+#Project id of the test user
+"PROJECT_ID_d":"demo"
+},
+
+#
+#log section. The path must exists on the machine running the dynpart 
+#scripts (p_switch.py, p_driver.py)
+#
+"logging": {
+#Path of the logging directory
+"log_dir": "/var/log/indigo/dynpart/",
+#Name of the log file
+"log_file": "dynpart.log"
+},
+
+#
+# switch section.
+# The core configuration section
+# 
+"switch": {
+# batch_cloud_json: this represents the Dynamic Partition JSON file containning the status
+#information of each node, it must be readable by all nodes (Compute Nodes and Worker Nodes)
+#
+"batch_cloud_json":"/usr/share/lsf/var/tmp/cloudside/farm.json",
+# bjobs_r: fullpath to an auxiliary program, whose output "rj_file"
+# is used by p_driver.py. 
+#
+"bjobs_r": "/usr/share/lsf/conf/scripts/dynpart/bjobs_r",
+#File containing the list of running jobs
+"rj_file":"/usr/share/lsf/var/tmp/batchside/bjobs_r.out",
+#
+# ttl_period: When a Compute Node is selected for migration
+# from Cloud to Batch, living VMs are to be removed before the
+# role switching can happen. This task should be in charge to
+# the cloud project using the VMs.
+# Alternatively, a Time To Live can be defined, after that the VMs
+# are destroyed by the partition manager. Default time to live period (5 mins) for VM
+#
+"ttl_period":"300"
+},
+
+#
+# machine_job_feature: the above ttl_period value is written
+# into a TTL_filepath directory, whose name matches the CNs name.
+# A TTL_ENV_VAR environment variable is also set
+# with the full pathname of the file
+#
+"machine_job_feature": {
+#Path of the file containg the TTL value
+"TTL_filepath":"/usr/share/lsf/var/tmp/cloudside",
+#Name of the enviornment variable for  TTL
+"TTL_ENV_VAR":"JOBFEATURES"
+},
+
+# VM section Only used by integration tools (such as
+# create_instances.py) to test functionalities on a fresh install.
+# This helps to simulate the workload of a cloud project
+#
+"VM_conf": {
+#The image used for the VM
+"image":"Fedora22",
+#Name of the flavor
+"flavor":"m1.large",
+#Name of the keypair
+"keyname":"demokey",
+#Number of retries before exiting with error
+"max_retries": 5,
+#Custom sleeptime
+"sleeptime": 5
+},
+
+# batch_submitter: batch section only used by integration tools (such
+# as submitter_demo.py) to test functionalities on a fresh install.
+# This helps to simulate the workload of a cloud project.  These are
+# parameters for the submitter_demo.py tool, which are used to submit
+# sleep jobs to a named queue. the tool submit jobs until max_pend are
+# queued, then keeps submitting again when less then min_pend jobs are
+# queued. Each job takes a random sleep time with avg_sleep seconds on
+# average. After each submission cycle the submitter sleeps for nap
+# seconds.
+#
+"batch_submitter": {
+"queue": "short",
+"max_pend": 300,
+"avg_sleep": 280,
+"nap": 5
+},
+
+"fairshare": {
+#LSF partition name
+"partition_name":"SL6_GLOBAL",
+#Customized pattern to look for in the lsb_file
+"pattern1":"HPART_NAME",
+#Customized pattern to look for in the lsb_file
+"pattern2":"USER_SHARES",
+#Path of the lsb.hosts file
+"lsb_file":"lsb.hosts_shares.txt",
+#Temporary path to keep the updated lsb.hosts file
+"temp_lsb_file":"temp_lsb.hosts_shares.txt",
+#u_groups which are of higher priority and should not be kept into mind while recalculating user share quota
+"blacklist":["u_admin", "u_ops", "u_dteam", "u_test"]
+}
+
+}
