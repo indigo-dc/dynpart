@@ -1,19 +1,19 @@
-#Cloud Deployment
+# Cloud Deployment
 
-##Installation
+## Installation
 
-  Dynpart is available on INDIGO-1 repository (only for CentOS) at [location](http://repo.indigo-datacloud.eu/repository/indigo/1/centos7/x86_64/base/).
- 
-  
-  Install the cloud side package:
-  
- ####FROM RPM
+Dynpart is available on INDIGO-1 repository \(only for CentOS\) at [location](http://repo.indigo-datacloud.eu/repository/indigo/1/centos7/x86_64/base/).  Very soon we will have the INDIGO-2 release.
+
+Install the cloud side package:
+
+#### FROM RPM
 
 You must have the epel repository enabled:
 
-```$ yum install epel-release```
+`$ yum install epel-release`
 
 Then you have to enable the INDIGO - DataCloud packages repositories. See full instructions [here](https://indigo-dc.gitbooks.io/indigo-datacloud-releases/content/generic_installation_and_configuration_guide_1.html). Briefly you have to download the repo file from [INDIGO SW Repository](http://repo.indigo-datacloud.eu/repos/1/indigo1.repo) in your /etc/yum.repos.d folder.
+
 ```
 $ cd /etc/yum.repos.d
 $ wget http://repo.indigo-datacloud.eu/repos/1/indigo1.repo
@@ -24,8 +24,8 @@ Finally install the dynpart package.
 ```
 $ yum install python-dynpart-partition-director
 ```
- 
-   On the cloud controller, installing this package basically deploy following files:
+
+On the cloud controller, installing this package basically deploy following files:
 
 ```
 /usr/bin/cn-manage.py
@@ -35,19 +35,18 @@ $ yum install python-dynpart-partition-director
 /usr/bin/p_driver.py
 /usr/bin/p_switch.py
 /var/log/indigo/dynpart/dynpart.log
-
 ```
-  
+
 ### The dynp configuration file
 
-The main configuration file for the Dynamic Partitioning is the
-dynp.conf json file. BASEDIR for dynp in our case is */usr/share/lsf/conf/scripts/dynpart * which is based on local LSF environment. 
-For instance the ’LSF_ENVDIR' for LSF@CNAF is */usr/share/lsf/conf*.
+The main configuration file for the Dynamic Partitioning is the  
+dynp.conf json file. BASEDIR for dynp in our case is _/usr/share/lsf/conf/scripts/dynpart _ which is based on local LSF environment.   
+For instance the ’LSF\_ENVDIR' for LSF@CNAF is _/usr/share/lsf/conf_.
 
-Dynamic partitioning must be configured properly via filling the */etc/indigo/dynpart/dynp.conf* which is eventually a link to 
-*/usr/share/lsf/conf/scripts/dynpart/dynp.conf*
+Dynamic partitioning must be configured properly via filling the _/etc/indigo/dynpart/dynp.conf_ which is eventually a link to   
+_/usr/share/lsf/conf/scripts/dynpart/dynp.conf_
 
-`$. ls -l /etc/indigo/dynpart/dynp.conf
+`$. ls -l /etc/indigo/dynpart/dynp.conf  
 lrwxrwxrwx 1 root root 45 Jul  7 12:28 /etc/indigo/dynpart/dynp.conf -> /usr/share/lsf/conf/scripts/dynpart/dynp.conf`
 
 json format does not allow comments in it. This document describes the configuration entries.
@@ -158,78 +157,80 @@ See below an example configuration dynp.conf with inline description. Note that 
 "nap": 5
 }
 
-}```
+}
+```
 
 The following describes the meaning of the attributes of the dynp configuartion file, for each subsection:
 
-**Section[auth]**
+**Section\[auth\]**
 
-| Attribute | Description|
-| -- | -- |
+| Attribute | Description |
+| --- | --- |
 | USERNAME | The name of the username with the admin role |
-| PASSWORD | The password of the above specified user with the admin role|
-| PROJECT_ID | The project to request authorization on|
-| AUTH_URL | The URL of the Openstack identity service|
-| USERNAME_d | The name of the standard user |
-| PASSWORD_d | The password of the above specified user|
-| PROJECT_ID_d | The project id of standard user|
+| PASSWORD | The password of the above specified user with the admin role |
+| PROJECT\_ID | The project to request authorization on |
+| AUTH\_URL | The URL of the Openstack identity service |
+| USERNAME\_d | The name of the standard user |
+| PASSWORD\_d | The password of the above specified user |
+| PROJECT\_ID\_d | The project id of standard user |
 
-**Section[logging]**
-
-| Attribute | Description |
-| -- | -- |
-| log_dir | Absolute path of the directory where the log file resides |
-| log_file | The name of the log file|
-
-**Section[VM_conf]**
+**Section\[logging\]**
 
 | Attribute | Description |
-| -- | -- |
+| --- | --- |
+| log\_dir | Absolute path of the directory where the log file resides |
+| log\_file | The name of the log file |
+
+**Section\[VM\_conf\]**
+
+| Attribute | Description |
+| --- | --- |
 | image | The image used for the VM. A virtual machine image, is a single file that contains a virtual disk that has a bootable operating system installed on it. Images are used to create virtual machine instances within the cloud. |
-| flavor | The name of the flavor. Virtual hardware templates are called "flavors" in OpenStack, defining sizes for RAM, disk, number of cores, and so on.  |
+| flavor | The name of the flavor. Virtual hardware templates are called "flavors" in OpenStack, defining sizes for RAM, disk, number of cores, and so on. |
 | keyname | The name of the keypair. One can access via ssh the VM using this key pair. |
-| max_retries | This number specifies the number of retries nova does to instantiate a VM before giving up and exiting together with releasing the assigned IP. |
+| max\_retries | This number specifies the number of retries nova does to instantiate a VM before giving up and exiting together with releasing the assigned IP. |
 | sleeptime | customized sleeptime which is used within many operations |
 
-**Section[switch]**
+**Section\[switch\]**
 
 | Attribute | Description |
-| -- | -- |
-| batch_cloud_json | Path of the JSON file containing the status of each node specifying wheather the node belongs to Batch or Cloud or is in an transitory state which can be C2B (Cloud to batch) or B2C (Batch to Cloud)  |
-| bjobs_r | Path of the script which calculates the number of running batch jobs on a given batch cluster |
-| rj_file |  The result of the above script is stored in this file |
-| ttl_period| Default time-to-live (TTL) period for VM in seconds. After spanning ttl_period all the VM's on a given compute node will be killed. |
+| --- | --- |
+| batch\_cloud\_json | Path of the JSON file containing the status of each node specifying wheather the node belongs to Batch or Cloud or is in an transitory state which can be C2B \(Cloud to batch\) or B2C \(Batch to Cloud\) |
+| bjobs\_r | Path of the script which calculates the number of running batch jobs on a given batch cluster |
+| rj\_file | The result of the above script is stored in this file |
+| ttl\_period | Default time-to-live \(TTL\) period for VM in seconds. After spanning ttl\_period all the VM's on a given compute node will be killed. |
 
-**Section[machine_job_feature]**
-
-| Attribute | Description |
-| -- | -- |
-| TTL_filepath | Path of the file containing the TTL value, it is stored in the shared file system and it is assumed that each VM knows this path. |
-| TTL_ENV_VAR | System enviornment variable which stores the value of TTL |
-
-**Section[batch_submitter]**
+**Section\[machine\_job\_feature\]**
 
 | Attribute | Description |
-| -- | -- |
-| queue | Submit sleep jobs on a given batch queue|
-| max_pend | Maximum number of pending jobs until which it keeps on submitting sleep jobs |
-| avg_sleep | The average sleep time for each job|
-| nap | The small nap period between each submission cycle|
+| --- | --- |
+| TTL\_filepath | Path of the file containing the TTL value, it is stored in the shared file system and it is assumed that each VM knows this path. |
+| TTL\_ENV\_VAR | System enviornment variable which stores the value of TTL |
 
+**Section\[batch\_submitter\]**
+
+| Attribute | Description |
+| --- | --- |
+| queue | Submit sleep jobs on a given batch queue |
+| max\_pend | Maximum number of pending jobs until which it keeps on submitting sleep jobs |
+| avg\_sleep | The average sleep time for each job |
+| nap | The small nap period between each submission cycle |
 
 ## Two main components on Cloud side:
 
-
-- `p_switch.py  <to_cloud|to_batch> <filename>`
+* `p_switch.py  <to_cloud|to_batch> <filename>`
 
 This tool triggers role switching for hosts from Batch to Cloud or vice-versa.  It is provided with a file contining a list of hostnames whose role is to be switched
 
-- `p_driver.py`
+* `p_driver.py`
 
 This script checks for status changes of each host under transition and takes needed action accordingly. For example, when a host switching from Batch to Cloud has no more running jobs, it is enabled to Openstack as hypervisor, and from then on, new VM can be instantiated there by the Nova component.
 
 ### To simulate the concurrent activity following tool is provided:
 
-- create_instances.py
+* create\_instances.py
 
   keep requesting VM instantiation to openstack at a regular rate
+
+
+
