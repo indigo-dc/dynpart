@@ -152,8 +152,9 @@ class Fairshare(object):
         outfile = open(self.temp_lsb_file, 'w')
         shL = updated_shareDict.items()
         shL.sort()
-        replaced_str = "USER_SHARES = (\\\n" + ''.join("\t\t[% s, % d]\\\n" % (k, 9631) for k in self.blacklist) + ''.join(
-            "\t\t[ % s, % d]\\\n" % (k, v['share']) for (k, v) in shL) + "\t\t)\n\n"
+        bl_p = ''.join("\t\t[%s, %d]\\\n" % (k, 9631) for k in self.blacklist)
+        shL_p = ''.join("\t\t[%s, %d]\\\n" % (k, v['share']) for (k, v) in shL)
+        replaced_str = "USER_SHARES = (\\\n" + bl_p + shL_p + "\t\t)\n\n"
         infile.seek(0)
         outfile.write(infile.read(pos_start))
         outfile.write(replaced_str)
