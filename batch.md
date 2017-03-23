@@ -1,8 +1,9 @@
 
 # Batch Deployment
-  ##Installation
+  ##Installation of Dynpart
 
-  Dynpart is available on INDIGO-1 repository (only for CentOS) at [location](http://repo.indigo-datacloud.eu/repository/indigo/1/centos7/x86_64/base/).
+  Dynpart is at the moment available on INDIGO-1 repository (only for CentOS) at [location](http://repo.indigo-datacloud.eu/repository/indigo/1/centos7/x86_64/base/).
+  Very soon we will have the INDIGO-2 release
   
   Install the LSF side package:
   
@@ -12,10 +13,10 @@ You must have the epel repository enabled:
 
 ```$ yum install epel-release```
 
-Then you have to enable the INDIGO - DataCloud packages repositories. See full instructions [here](https://indigo-dc.gitbooks.io/indigo-datacloud-releases/content/generic_installation_and_configuration_guide_1.html). Briefly you have to download the repo file from [INDIGO SW Repository](http://repo.indigo-datacloud.eu/repos/1/indigo1.repo) in your /etc/yum.repos.d folder.
+Then you have to enable the INDIGO - DataCloud packages repositories. See full instructions [here](https://indigo-dc.gitbooks.io/indigo-datacloud-releases/content/generic_installation_and_configuration_guide_1.html). Briefly you have to download the repo file from [INDIGO SW Repository](http://repo.indigo-datacloud.eu/repos/2/indigo2.repo) in your /etc/yum.repos.d folder.
 ```
 $ cd /etc/yum.repos.d
-$ wget http://repo.indigo-datacloud.eu/repos/1/indigo1.repo
+$ wget http://repo.indigo-datacloud.eu/repos/2/indigo2.repo
 ```
 
 Finally install the dynpart package.
@@ -24,17 +25,47 @@ Finally install the dynpart package.
 $ yum install python-lsf-dynpart-partition-director
 ```
 
-  On the LSF master, installing this package basically create and deploy following directories and files:
+## Updating Dynpart
+Install the LSF side package:
 
+###FROM RPM
+
+For updating from the INDIGO-1 release
+
+Make sure you have added the INDIGO package repository to you package sources. The package repository can be found at the [INDIGO SW Repository](http://repo.indigo-datacloud.eu/repos/2/indigo2.repo)
+
+#####Update the Dynpart package
+```
+$ sudo yum update python-lsf-dynpart-partition-director
+```
+
+On the LSF master, installing this package basically create and deploy following directories and files:
 ```
 mkdir -p $LSF_TOP/var/tmp/cloudside/
 mkdir -p $LSF_TOP/var/tmp/batchside/
 mkdir -p $LSF_TOP/conf/scripts/dynpart/
-cp dynp.conf elim.dynp esub.dynp bjobs_r.py LSF_TOP/conf/scripts/dynpart/
+cp dynp.conf dynp.conf.template elim.dynp esub.dynp bjobs_r.py LSF_TOP/conf/scripts/dynpart/
 cp farm.json $LSF_TOP/var/tmp/cloudside/
+/usr/bin/adjust_lsf_shares.py
+/usr/bin/submitter_demo.py
+```
+**IMPORTANT NOTE :**
+
+Please create this link according to the variable ``$LSF_SERVERDIR`` which depends on LSF installation. 
+
+```
 ln -s $LSF_TOP/conf/scripts/dynpart/elim.dynp $LSF_SERVERDIR/elim.dynp
 ln -s $LSF_TOP/conf/scripts/dynpart/esub.dynp $LSF_SERVERDIR/esub.dynp
 ```
+and check if this link exists if not then create the one:
+
+
+```
+ln -s   $LSF_TOP/conf/scripts/dynpart/dynp.conf /etc/indigo/dynpart/dynp.conf
+
+```
+
+
 ### Retrieving the list of running batch jobs
 
 The list of running jobs on each batch host can be achieved in two alternative ways:
