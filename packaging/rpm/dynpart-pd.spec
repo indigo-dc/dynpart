@@ -1,5 +1,5 @@
 %define _lsfenvdir /usr/share/lsf/conf
-%define _bindir /bin
+%define _bindir /usr/bin
 
 Name:          python-dynpart-partition-director
 Version:       0.9
