@@ -1,8 +1,9 @@
 %define _lsfenvdir /usr/share/lsf/conf
+%define _bindir /bin
 
 Name:          python-dynpart-partition-director
-Version:       0.08
-Release:       1%{?dist}
+Version:       0.9
+Release:       2%{?dist}
 Summary:       Partition Director of batch and cloud resources
 License:       Apache Software License
 Source:        %name-%version.tar.gz
@@ -49,12 +50,14 @@ install -D -m0755 bin/p_driver.py           %{buildroot}%{_bindir}/p_driver.py
 install -d -m0755                           %{buildroot}%{_sysconfdir}/indigo/dynpart
 install -d -m0755                           %{buildroot}%{_lsfenvdir}/scripts/dynpart
 install -D -m0644 etc/dynp.conf             %{buildroot}%{_lsfenvdir}/scripts/dynpart/dynp.conf
+install -D -m0644 etc/dynp.conf.template    %{buildroot}%{_lsfenvdir}/scripts/dynpart/dynp.conf.template
 install -D -m0755 batch/esub.dynp.template  %{buildroot}%{_lsfenvdir}/scripts/dynpart/esub.dynp
 install -D -m0755 batch/elim.dynp           %{buildroot}%{_lsfenvdir}/scripts/dynpart/elim.dynp
-install -D -m0644 batch/mcjobs_r.c          %{buildroot}%{_lsfenvdir}/scripts/dynpart/mcjobs_r.c
+install -D -m0644 batch/bjobs_r.py          %{buildroot}%{_lsfenvdir}/scripts/dynpart/bjobs_r.py
 install -d -m0755                           %{buildroot}%{_usr}/share/lsf/var/tmp/cloudside
 install -D -m0644 etc/farm.json             %{buildroot}%{_usr}/share/lsf/var/tmp/cloudside/farm.json
 install -D -m0755 bin/submitter_demo.py     %{buildroot}%{_bindir}/submitter_demo.py
+install -D -m0755 bin/adjust_lsf_shares.py  %{buildroot}%{_bindir}/adjust_lsf_shares.py
 
 %files cc
 %defattr(-,root,root,-)
@@ -70,17 +73,17 @@ install -D -m0755 bin/submitter_demo.py     %{buildroot}%{_bindir}/submitter_dem
 %defattr(-,root,root,-)
 %config(noreplace) %{_lsfenvdir}/scripts/dynpart/dynp.conf
 %{_lsfenvdir}/scripts/dynpart
+%{_lsfenvdir}/scripts/dynpart/dynp.conf.template
 %{_lsfenvdir}/scripts/dynpart/esub.dynp
 %{_lsfenvdir}/scripts/dynpart/elim.dynp
-%{_lsfenvdir}/scripts/dynpart/mcjobs_r.c
+%{_lsfenvdir}/scripts/dynpart/bjobs_r.py
 %{_usr}/share/lsf/var/tmp/cloudside
 %{_usr}/share/lsf/var/tmp/cloudside/farm.json
 %{_bindir}/submitter_demo.py
+%{_bindir}/adjust_lsf_shares.py
 
 %post lsf
-ln -s   %{_lsfenvdir}/scripts/dynpart/dynp.conf %{_sysconfdir}/indigo/dynpart/dynp.conf
-ln -s   %{_lsfenvdir}/scripts/dynpart/esub.dynp.template %{getenv:LSF_SERVERDIR}/esub.dynp
-ln -s   %{_lsfenvdir}/scripts/dynpart/elim.dynp %{getenv:LSF_SERVERDIR}/elim.dynp
+ln -s %{_lsfenvdir}/scripts/dynpart/dynp.conf %{_sysconfdir}/indigo/dynpart/dynp.conf
 
 %changelog cc
 
