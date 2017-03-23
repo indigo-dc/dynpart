@@ -1,5 +1,5 @@
 name=python-dynpart-partition-director
-version=0.08
+version=0.9
 tag=master
 git=https://github.com/indigo-dc/dynpart.git
 source_dir=sources
